@@ -1,0 +1,5 @@
+{
+    "python" : [
+        {"name":"boto3", "version":">=1.35.97"}
+    ]
+}

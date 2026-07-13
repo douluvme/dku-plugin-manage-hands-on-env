@@ -1,0 +1,45 @@
+{
+    // Plugin identifiers are globally unique and only contain A-Za-z0-9_-
+    "id": "manage-hands-on-env",
+
+    // It is highly recommended to use Semantic Versioning
+    // v1.0.4 release note : added functionality to disable a deployment before deleting it to prevent leaving ghost services on API nodes.
+    // v1.0.5 release note : added agent hands-on projects
+    // v1.0.6 release note : added functionality to delete project in sandbox folder
+    // v1.0.7 release note : added loan adviosr agent starter
+    // v1.0.8 release note : made various changes to duplicate, delete, and change ownership macros
+    // v1.0.9 release note : added delete everything from all user folders option
+    "version": "1.0.9",
+
+    // Meta data for display purposes:
+    "meta": {
+        // label: name of the plugin as displayed, should be short
+        "label": "Manage hands-on projects and users",
+
+        // description: longer string to help end users understand what this plugin does
+        "description": "This plugin handles duplication and housekeeping of hands-on projects and it also handles enabling and disabling of users",
+
+        "author": "jaeha",
+
+        // icon: must be one of the FontAwesome 5.15.4 icons, complete list here at https://fontawesome.com/v5/docs/
+#        "icon": "fas fa-puzzle-piece",
+        "icon": "fas fa-hammer",
+
+        // List of tags for filtering the list of plugins
+        "tags": [], //for example: ["Machine Learning", "NLP"]
+
+        // URL where the user can learn more about the plugin
+        "url": "",
+
+        "licenseInfo": "Apache Software License"
+    },
+    "params": [
+    {
+        "type": "PRESET",
+        "name": "aws_account",
+        "label": "AWS Account",
+        "parameterSetId": "aws_credentials",
+        "mandatory": true
+    }
+    ]
+}

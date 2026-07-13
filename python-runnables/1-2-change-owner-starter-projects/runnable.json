@@ -1,0 +1,160 @@
+/* This file is the descriptor for the python runnable manage-starter-project */
+{
+    "meta": {
+        "label": "2.Change Projects Ownership",
+        "description": "Change owner of a selected starter project for specified number of users",
+        "category" : "⚠️ Hands-on 1: Manage Starter Projects",
+        "icon": "far fa-id-card fa-1x"
+    },
+
+    /* whether the runnable's code is untrusted */
+    "impersonate": false,
+
+
+    /* params:
+    DSS will generate a formular from this list of requested parameters.
+    Your component code can then access the value provided by users using the "name" field of each parameter.
+
+    Available parameter types include:
+    STRING, INT, DOUBLE, BOOLEAN, DATE, SELECT, TEXTAREA, DATASET, DATASET_COLUMN, MANAGED_FOLDER, PRESET and others.
+
+    For the full list and for more details, see the documentation: https://doc.dataiku.com/dss/latest/plugins/reference/params.html
+    */
+    "params": [
+/*
+        {
+            "name": "user_count",
+            "label": "Number of users",
+            "type": "INT",
+            "description": "Number of users who will attend the workshop",
+            "defaultValue": 33,
+            "mandatory": true
+        }, 
+*/
+        {
+            "name": "user_num_from",
+            "label": "User number (from)",
+            "type": "INT",
+            "description": "From this user number, your request will be processed",
+            "defaultValue": 1,
+            "mandatory": true
+        },
+        {
+            "name": "user_num_to",
+            "label": "User number (to)",
+            "type": "INT",
+            "description": "Up to this user number, your request will be processed. user99는 항상 대상에 포함되므로 고려하지 않아도 됨.",
+            "defaultValue": 30,
+            "mandatory": true
+        },
+            /* Note that standard json parsing will return it as a double in Python (instead of an int), so you need to write
+               int(self.config()['parameter2'])
+            */
+        {
+            "name": "key_select_method",
+            "label": "Select projects to change ownership",
+            "type": "SELECT",
+            "selectChoices" : [
+              { "value": "from_list", "label": "from a list of standard starter projects"},
+              { "value": "from_input", "label": "from user input"}
+            ],
+            "defaultValue": "from_list",
+            "mandatory": true
+        },
+        {
+            "name": "project_key_select",
+            "label": "Project key to change owner",
+            "type": "SELECT",
+            "selectChoices": [
+                {
+                    "value": "KO1COBUILD",
+                    "label": "Start 1 Cobuild"
+                },
+                {
+                    "value": "KO2EXPL",
+                    "label": "Start 2 Explore"
+                },
+                {
+                    "value": "KO3ML",
+                    "label": "Start 3 ML"
+                },
+                {
+                    "value": "KO4EVAL",
+                    "label": "Start 4 Evaluate"
+                },
+                {
+                    "value": "PROD_REVIEW",
+                    "label": "LLM - 상품 리뷰 분석"
+                },
+                {
+                    "value": "LLMPROMPTENGINEERING",
+                    "label": "LLM - Prompt Engineering"
+                },
+                {
+                    "value": "MULTIMODALRAG",
+                    "label": "LLM - Multimodal RAG"
+                },
+                {
+                    "value": "TUT_VISUAL_AGENTS",
+                    "label": "Visual Agents Tutorial"
+                },
+                {
+                    "value": "LOAN_ADVISOR_AGENT",
+                    "label": "대출 상담 어드바이저 에이전트"
+                }
+            ],
+            "mandatory": true,
+            "visibilityCondition": "model.key_select_method == 'from_list'"
+        },
+        {
+            "type": "STRING",
+            "name": "project_key_input",
+            "label": "Project to change owner",
+            "description" : "Type here project key you want to change ownership.",
+            "mandatory": false,
+            "allowDuplicates": false,
+            "visibilityCondition": "model.key_select_method == 'from_input'"
+        },
+        {
+          "type": "BOOLEAN",
+          "name": "admin_TF",
+          "label": "Tick this if you want to set project owner back to admin",
+          "defaultValue": false
+        }
+    ],
+
+    /* list of required permissions on the project to see/run the runnable */
+    "permissions": [],
+
+    /* what the code's run() returns:
+       - NONE : no result
+       - HTML : a string that is a html (utf8 encoded)
+       - FOLDER_FILE : a (folderId, path) pair to a file in a folder of this project (json-encoded)
+       - FILE : raw data (as a python string) that will be stored in a temp file by DSS
+       - URL : a url
+     */
+    "resultType": "HTML",
+
+    /* label to use when the runnable's result is not inlined in the UI (ex: for urls) */
+    "resultLabel": "created_projects",
+
+    /* for FILE resultType, the extension to use for the temp file */
+    "extension": "txt",
+
+    /* for FILE resultType, the type of data stored in the temp file */
+    "mimeType": "text/plain",
+
+    /* Macro roles define where this macro will appear in DSS GUI. They are used to pre-fill a macro parameter with context.
+
+       Each role consists of:
+        - type: where the macro will be shown
+            * when selecting DSS object(s): DATASET, DATASETS, API_SERVICE, API_SERVICE_VERSION, BUNDLE, VISUAL_ANALYSIS, SAVED_MODEL, MANAGED_FOLDER
+            * in the global project list: PROJECT_MACROS
+        - targetParamsKey(s): name of the parameter(s) that will be filled with the selected object
+    */
+    "macroRoles": [
+        {
+            "type": "PROJECT_MACROS"
+        } 
+    ]
+}

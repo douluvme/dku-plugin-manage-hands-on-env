@@ -1,0 +1,171 @@
+/* This file is the descriptor for the python runnable manage-starter-project */
+{
+    "meta": {
+        // label: name of the runnable as displayed, should be short
+        "label": "1.Delete Starter Projects",
+
+        // description: longer string to help end users understand what this runnable does
+        "description": "Delete starter projects for MLOps/LLM hands-on",
+        "category" : "⚠️ Hands-on 2: Housekeeping",
+
+        // icon: must be one of the FontAwesome 5.15.4 icons, complete list here at https://fontawesome.com/v5/docs/
+#        "icon": "fas fa-trash fa-1x"
+        "icon": "icon-trash"
+    },
+
+    /* whether the runnable's code is untrusted */
+    "impersonate": false,
+
+
+    /* params:
+    DSS will generate a formular from this list of requested parameters.
+    Your component code can then access the value provided by users using the "name" field of each parameter.
+
+    Available parameter types include:
+    STRING, INT, DOUBLE, BOOLEAN, DATE, SELECT, TEXTAREA, DATASET, DATASET_COLUMN, MANAGED_FOLDER, PRESET and others.
+
+    For the full list and for more details, see the documentation: https://doc.dataiku.com/dss/latest/plugins/reference/params.html
+    */
+    "params": [
+        {
+            "name": "delete_type",
+            "label": "Delete",
+            "type": "SELECT",
+            "selectChoices" : [
+              { "value": "user_num", "label": "starter projects in user folders using user num"},
+              { "value": "all_user_folders", "label": "all projects in all user folders"},
+#              { "value": "root_folder", "label": "all projects in root folder"},
+              { "value": "sandbox", "label": "all projects in sandbox folder"}
+            ],
+            "defaultValue": "user_num",
+            "mandatory": true
+        },
+        {
+            "type": "BOOLEAN",
+            "name": "delete_TF",
+            "label": "Perform deletion??",
+            "description" : "If checked, projects will be actually deleted. Otherwise, only list will be displayed ",
+            "defaultValue": false
+        },
+        {
+            "name": "user_count",
+            "label": "Number of users",
+            "type": "INT",
+            "description": "Number of workshop users whose projects will be deleted. 강사(user99)를 제외한 수강생 수",
+            "defaultValue": 33,
+            "mandatory": true,
+            "visibilityCondition": "model.delete_type == 'user_num'"
+        },
+        {
+            "name": "key_select_method",
+            "label": "Select projects to delete",
+            "type": "SELECT",
+            "selectChoices" : [
+              { "value": "from_list", "label": "from a list of standard starter projects"},
+              { "value": "from_input", "label": "from user input"}
+            ],
+            "defaultValue": "from_list",
+            "mandatory": true,
+            "visibilityCondition": "model.delete_type == 'user_num'"
+        },
+        {
+            "name": "project_keys_list",
+            "label": "Projects to delete",
+            "description" : "Select starter projects you want to delete",
+            "type": "MULTISELECT",
+            "selectChoices": [
+                {
+                    "value": "KO1COBUILD",
+                    "label": "Start 1 Cobuild"
+                },
+                {
+                    "value": "KO2EXPL",
+                    "label": "Start 2 Explore"
+                },
+                {
+                    "value": "KO3ML",
+                    "label": "Start 3 ML"
+                },
+                {
+                    "value": "KO4EVAL",
+                    "label": "Start 4 Evaluate"
+                },
+                {
+                    "value": "PROD_REVIEW",
+                    "label": "LLM - 상품 리뷰 분석"
+                },
+                {
+                    "value": "LLMPROMPTENGINEERING",
+                    "label": "LLM - Prompt Engineering"
+                },
+                {
+                    "value": "MULTIMODALRAG",
+                    "label": "LLM - Multimodal RAG"
+                },
+                {
+                    "value": "TUT_VISUAL_AGENTS",
+                    "label": "Visual Agents Tutorial"
+                },
+                {
+                    "value": "LOAN_ADVISOR_AGENT",
+                    "label": "대출 상담 어드바이저 에이전트"
+                }
+            ],
+            "mandatory": true,
+            "visibilityCondition": "model.delete_type == 'user_num' && model.key_select_method == 'from_list'"
+        },
+        {
+            "type": "STRINGS",
+            "name": "project_keys_input",
+            "label": "Projects to delete",
+            "description" : "Type here project keys you want to delete.",
+            "mandatory": false,
+            "allowDuplicates": false,
+            "visibilityCondition": "model.delete_type == 'user_num' && model.key_select_method == 'from_input'"
+        },
+        {
+            "type": "STRINGS",
+            "name": "projects_to_keep",
+            "label": "Projects to keep",
+            "description" : "List here project keys you want to keep. All other projects in root/sandbox folder will be deleted.",
+            "mandatory": false,
+            "allowDuplicates": false,
+            "visibilityCondition": "model.delete_type == 'root_folder' || model.delete_type == 'sandbox'"
+        }
+    ],
+
+    /* list of required permissions on the project to see/run the runnable */
+    "permissions": [],
+
+    /* what the code's run() returns:
+       - NONE : no result
+       - HTML : a string that is a html (utf8 encoded)
+       - FOLDER_FILE : a (folderId, path) pair to a file in a folder of this project (json-encoded)
+       - FILE : raw data (as a python string) that will be stored in a temp file by DSS
+       - URL : a url
+     */
+    "resultType": "HTML",
+
+    /* label to use when the runnable's result is not inlined in the UI (ex: for urls) */
+    "resultLabel": "created_projects",
+
+    /* for FILE resultType, the extension to use for the temp file */
+    "extension": "txt",
+
+    /* for FILE resultType, the type of data stored in the temp file */
+    "mimeType": "text/plain",
+
+    /* Macro roles define where this macro will appear in DSS GUI. They are used to pre-fill a macro parameter with context.
+
+       Each role consists of:
+        - type: where the macro will be shown
+            * when selecting DSS object(s): DATASET, DATASETS, API_SERVICE, API_SERVICE_VERSION, BUNDLE, VISUAL_ANALYSIS, SAVED_MODEL, MANAGED_FOLDER
+            * in the global project list: PROJECT_MACROS
+        - targetParamsKey(s): name of the parameter(s) that will be filled with the selected object
+    */
+    "macroRoles": [
+        {
+            "type": "PROJECT_MACROS"
+        } 
+    ]
+}

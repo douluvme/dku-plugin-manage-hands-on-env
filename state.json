@@ -1,0 +1,17 @@
+{
+  "actions": [
+    {
+      "ts": 1733277420959,
+      "action": "INSTALL",
+      "user": "jaeha"
+    },
+    {
+      "ts": 1737358681259,
+      "action": "INSTALLED_DEPS_PYTHON",
+      "user": "jaeha"
+    }
+  ],
+  "gitState": {
+    "enabled": false
+  }
+}
