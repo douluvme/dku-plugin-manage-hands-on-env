@@ -63,7 +63,8 @@ class MyRunnable(Runnable):
 
             for x in range(number_of_users):
                 user_num = '99' if x == 0 else str(x).zfill(2)
-                result_string = f"{result_string}<br/><b>user{user_num}</b> :"
+                sep = "<br/>" if result_string else ""
+                result_string = f"{result_string}{sep}<b>user{user_num}</b> :"
 
                 user_folder = get_user_folder_by_id(client, 'user' + user_num, create_if_not_exist_TF=False)
 
@@ -111,7 +112,8 @@ class MyRunnable(Runnable):
             print(f"Found {len(user_folders)} user folder(s)")
 
             for user_folder in user_folders:
-                result_string = f"{result_string}<br/><b>{user_folder.get_name()}</b> :"
+                sep = "<br/>" if result_string else ""
+                result_string = f"{result_string}{sep}<b>{user_folder.get_name()}</b> :"
 
                 for folder, depth, project_keys in walk_folder_tree(user_folder):
                     folder_name = folder.get_name()
