@@ -231,10 +231,11 @@ class MyRunnable(Runnable):
         if delete_TF:
             return_msg = f"<h4>Successfully deleted {total_delete_count} project(s)</h4>{result_string}"
         else:
-            return_msg = f"<h4>Identified {total_delete_count} project(s) to delete</h4><br/>{result_string}"
+            return_msg = f"<h4>Identified {total_delete_count} project(s) to delete</h4>{result_string}"
 
-        verb = "Deleted" if delete_TF else "Identified"
-        return_msg += f"<h4>{verb} {total_folder_count} user folder(s)</h4>"
+        if total_folder_count:
+            verb = "Deleted" if delete_TF else "Identified"
+            return_msg += f"<h4>{verb} {total_folder_count} user folder(s)</h4>"
 
         if failures:
             rows = "".join(f"<li>&lt;{k}&gt; — {reason}</li>" for k, reason in failures)

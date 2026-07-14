@@ -96,8 +96,7 @@ def duplicate_project_by_id(client, project_id, user_id, dest_folder, build_TF):
 
         # set tag
         project_metadata = new_project.get_metadata()
-        project_metadata['tags'] = ['duplicated']
-        project_metadata['tags'] = [project_name]
+        project_metadata['tags'] = ['duplicated', project_name]
         new_project.set_metadata(project_metadata)
 
         # build all datasets
@@ -109,7 +108,7 @@ def duplicate_project_by_id(client, project_id, user_id, dest_folder, build_TF):
     except Exception as err:
         print('duplicate failed')
         print("Error = ", str(err))
-        return ""
+        return None
     
     return new_project_id
 
