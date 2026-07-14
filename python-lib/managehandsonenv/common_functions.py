@@ -36,14 +36,23 @@ def list_user_folders(client):
 
 def walk_folder_tree(folder, depth=0):
     """
-    Depth-first, deepest first. Yields (folder, depth, project_keys).
+    Depth-first, deepest first. Yields (folder, depth, project_keys, child_folders).
+
+    child_folders is this folder's direct children, fetched once up front
+    (before any of them can be deleted by the caller). Callers must use this
+    list instead of calling folder.list_child_folders() again later in the
+    walk: by that point some of those children may already have been deleted,
+    and re-listing would try to re-fetch a folder id that no longer exists
+    on the server (raising UnauthorizedException/NotFoundException).
+
     Ordering guarantees children are yielded before their parent,
     so deleting in iteration order is always safe.
     """
-    for child in folder.list_child_folders():
+    child_folders = folder.list_child_folders()
+    for child in child_folders:
         for item in walk_folder_tree(child, depth + 1):
             yield item
-    yield folder, depth, folder.list_project_keys()
+    yield folder, depth, folder.list_project_keys(), child_folders
 
 def get_user_folder_by_id(client, user_id, create_if_not_exist_TF):
     """Return the user's project folder under SANDBOX, or None."""
