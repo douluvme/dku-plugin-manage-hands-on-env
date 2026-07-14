@@ -1,6 +1,28 @@
 import re
 
 # define functions
+def build_all(client, project_id):
+
+    project = client.get_project(project_id)
+
+    flow = project.get_flow()
+    graph = flow.get_graph()
+    for k,v in graph.data.get('nodes').items():
+        if v.get('successors') == [] and k != 'unknown' and k != 'eval':
+            definition = {
+                "type" : 'RECURSIVE_FORCED_BUILD',
+                "outputs" : [{"id": k}]
+            }
+            print('Building dataset {}'.format(k))
+            try:
+                job = project.start_job(definition)
+            except Exception as err:
+                print('failed starting job')
+                print("Error = ", str(err))
+                return 0
+
+    return 1
+
 def list_user_folders(client):
     """All userNN folders directly under SANDBOX, sorted by name."""
     sandbox = client.get_project_folder('SANDBOX')
