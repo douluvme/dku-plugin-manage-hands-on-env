@@ -9,7 +9,11 @@
     // v1.0.7 release note : added loan adviosr agent starter
     // v1.0.8 release note : made various changes to duplicate, delete, and change ownership macros
     // v1.0.9 release note : added delete everything from all user folders option
-    "version": "1.0.9",
+    // v1.1.0 release note : added SECURITY.md; fixed project tag/return-value bugs, blank-line
+    //                        formatting in delete results, a crash when deleting nested folders
+    //                        in all-user-folders mode, and a KeyError crash in duplicate-starter-
+    //                        projects caused by dead build_TF/build_all plumbing
+    "version": "1.1.0",
 
     // Meta data for display purposes:
     "meta": {
