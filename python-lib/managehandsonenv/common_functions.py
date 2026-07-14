@@ -1,28 +1,6 @@
 import re
 
 # define functions
-def build_all(client, project_id):
-
-    project = client.get_project(project_id)
-
-    flow = project.get_flow()
-    graph = flow.get_graph()
-    for k,v in graph.data.get('nodes').items():
-        if v.get('successors') == [] and k != 'unknown' and k != 'eval':     
-            definition = {
-                "type" : 'RECURSIVE_FORCED_BUILD',
-                "outputs" : [{"id": k}]
-            }
-            print('Building dataset {}'.format(k)) 
-            try:
-                job = project.start_job(definition)
-            except Exception as err:
-                print('failed starting job')
-                print("Error = ", str(err))
-                return 0
-
-    return 1
-
 def list_user_folders(client):
     """All userNN folders directly under SANDBOX, sorted by name."""
     sandbox = client.get_project_folder('SANDBOX')
@@ -88,12 +66,12 @@ def get_project_folder_by_num(client, project_id_prefix, user_num):
     
     return project_folder
 
-def duplicate_project_by_id(client, project_id, user_id, dest_folder, build_TF):
+def duplicate_project_by_id(client, project_id, user_id, dest_folder):
     # get original project
     project = client.get_project(project_id)
     project_meta = project.get_metadata()
     project_name = project_meta['label']
-    
+
     # duplicate project
     new_project_id = project_id + '_' + user_id
     print('Duplicating ' + new_project_id)
@@ -108,12 +86,6 @@ def duplicate_project_by_id(client, project_id, user_id, dest_folder, build_TF):
         project_metadata['tags'] = ['duplicated', project_name]
         new_project.set_metadata(project_metadata)
 
-        # build all datasets
-        if build_TF == True:
-            build_all(client, new_project_id)
-        else:
-            print("skip build all")
-
     except Exception as err:
         print('duplicate failed')
         print("Error = ", str(err))
@@ -121,7 +93,7 @@ def duplicate_project_by_id(client, project_id, user_id, dest_folder, build_TF):
     
     return new_project_id
 
-def duplicate_project_by_num(client, project_id, user_num, dest_folder, build_TF):
+def duplicate_project_by_num(client, project_id, user_num, dest_folder):
     project = client.get_project(project_id)
     project_name = project.get_metadata()['label']
 
@@ -141,9 +113,6 @@ def duplicate_project_by_num(client, project_id, user_num, dest_folder, build_TF
     metadata = new_project.get_metadata()
     metadata['tags'] = ['duplicated', project_name]
     new_project.set_metadata(metadata)
-
-#    if build_TF:
-#        build_all(client, new_project_id)
 
     return new_project_id
 
