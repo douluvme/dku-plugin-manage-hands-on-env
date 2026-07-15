@@ -3,6 +3,7 @@
     "id": "manage-hands-on-env",
 
     // It is highly recommended to use Semantic Versioning
+    // One-line summary per version below; see CHANGELOG.md for details.
     // v1.0.4
     //   added functionality to disable a deployment before deleting it to prevent leaving ghost services on API nodes.
     // v1.0.5
@@ -16,9 +17,7 @@
     // v1.0.9
     //   added delete everything from all user folders option
     // v1.1.0
-    //   added SECURITY.md; fixed project tag/return-value bugs, blank-line formatting in delete
-    //   results, a crash when deleting nested folders in all-user-folders mode, and a KeyError
-    //   crash in duplicate-starter-projects caused by dead build_TF/build_all plumbing
+    //   added SECURITY.md and fixed several bugs in the delete/duplicate macros
     "version": "1.1.0",
 
     // Meta data for display purposes:
