@@ -37,14 +37,6 @@
             /* Note that standard json parsing will return it as a double in Python (instead of an int), so you need to write
                int(self.config()['parameter2'])
             */
-/*
-        {
-          "type": "BOOLEAN",
-          "name": "full_dup_TF",
-          "label": "Full duplication of projects?",
-          "defaultValue": true
-        },
-*/
         {
             "name": "key_select_method",
             "label": "Select projects to duplicate",

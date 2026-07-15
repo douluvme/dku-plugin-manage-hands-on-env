@@ -3,13 +3,22 @@
     "id": "manage-hands-on-env",
 
     // It is highly recommended to use Semantic Versioning
-    // v1.0.4 release note : added functionality to disable a deployment before deleting it to prevent leaving ghost services on API nodes.
-    // v1.0.5 release note : added agent hands-on projects
-    // v1.0.6 release note : added functionality to delete project in sandbox folder
-    // v1.0.7 release note : added loan adviosr agent starter
-    // v1.0.8 release note : made various changes to duplicate, delete, and change ownership macros
-    // v1.0.9 release note : added delete everything from all user folders option
-    "version": "1.0.9",
+    // One-line summary per version below; see CHANGELOG.md for details.
+    // v1.0.4
+    //   added functionality to disable a deployment before deleting it to prevent leaving ghost services on API nodes.
+    // v1.0.5
+    //   added agent hands-on projects
+    // v1.0.6
+    //   added functionality to delete project in sandbox folder
+    // v1.0.7
+    //   added loan adviosr agent starter
+    // v1.0.8
+    //   made various changes to duplicate, delete, and change ownership macros
+    // v1.0.9
+    //   added delete everything from all user folders option
+    // v1.1.0
+    //   added SECURITY.md and fixed several bugs in the delete/duplicate macros
+    "version": "1.1.0",
 
     // Meta data for display purposes:
     "meta": {

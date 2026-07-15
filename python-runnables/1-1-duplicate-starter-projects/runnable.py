@@ -31,7 +31,6 @@ class MyRunnable(Runnable):
     def run(self, progress_callback):
         config = self.config
         client = self.client
-        build_TF = config["build_TF"]
         overwrite_TF = config.get("overwrite_TF", False)
 
         if self.project_key != 'ADMINV4':
@@ -73,7 +72,7 @@ class MyRunnable(Runnable):
 
                 try:
                     result = duplicate_project_by_num(
-                        client, project, user_num, user_folder, build_TF
+                        client, project, user_num, user_folder
                     )
                 except Exception as e:
                     print(f"{target_key} duplication failed: {e}")

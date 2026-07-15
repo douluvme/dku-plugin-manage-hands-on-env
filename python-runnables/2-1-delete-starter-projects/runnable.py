@@ -24,7 +24,7 @@ class MyRunnable(Runnable):
         elif config["delete_type"] == 'all_user_folders':
             total = 0
             for user_folder in list_user_folders(client):
-                for _folder, _depth, project_keys in walk_folder_tree(user_folder):
+                for _folder, _depth, project_keys, _child_folders in walk_folder_tree(user_folder):
                     total += len(project_keys) + 1
                     
             print(f"progress target = {total}")
@@ -63,7 +63,8 @@ class MyRunnable(Runnable):
 
             for x in range(number_of_users):
                 user_num = '99' if x == 0 else str(x).zfill(2)
-                result_string = f"{result_string}<br/><b>user{user_num}</b> :"
+                sep = "<br/>" if result_string else ""
+                result_string = f"{result_string}{sep}<b>user{user_num}</b> :"
 
                 user_folder = get_user_folder_by_id(client, 'user' + user_num, create_if_not_exist_TF=False)
 
@@ -111,9 +112,10 @@ class MyRunnable(Runnable):
             print(f"Found {len(user_folders)} user folder(s)")
 
             for user_folder in user_folders:
-                result_string = f"{result_string}<br/><b>{user_folder.get_name()}</b> :"
+                sep = "<br/>" if result_string else ""
+                result_string = f"{result_string}{sep}<b>{user_folder.get_name()}</b> :"
 
-                for folder, depth, project_keys in walk_folder_tree(user_folder):
+                for folder, depth, project_keys, child_folders in walk_folder_tree(user_folder):
                     folder_name = folder.get_name()
                     indent = "  " * depth
                     folder_clean = True
@@ -160,7 +162,10 @@ class MyRunnable(Runnable):
                     # Test membership, NOT list_child_folders() presence — presence
                     # differs between dry-run and real run, membership does not.
                     # This is what keeps the dry-run and real-run counts identical.
-                    if any(c.get_name() in kept_folders for c in folder.list_child_folders()):
+                    # Reuse child_folders from the walk instead of re-listing here:
+                    # by this point some children may already be deleted, and
+                    # re-fetching them by id would 403/404.
+                    if any(c.get_name() in kept_folders for c in child_folders):
                         print(f"{indent}Keep folder {folder_name} (child folder kept)")
                         kept_folders.add(folder_name)
                         continue
@@ -231,10 +236,11 @@ class MyRunnable(Runnable):
         if delete_TF:
             return_msg = f"<h4>Successfully deleted {total_delete_count} project(s)</h4>{result_string}"
         else:
-            return_msg = f"<h4>Identified {total_delete_count} project(s) to delete</h4><br/>{result_string}"
+            return_msg = f"<h4>Identified {total_delete_count} project(s) to delete</h4>{result_string}"
 
-        verb = "Deleted" if delete_TF else "Identified"
-        return_msg += f"<h4>{verb} {total_folder_count} user folder(s)</h4>"
+        if total_folder_count:
+            verb = "Deleted" if delete_TF else "Identified"
+            return_msg += f"<h4>{verb} {total_folder_count} user folder(s)</h4>"
 
         if failures:
             rows = "".join(f"<li>&lt;{k}&gt; — {reason}</li>" for k, reason in failures)

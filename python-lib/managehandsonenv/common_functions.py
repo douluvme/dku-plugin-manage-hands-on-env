@@ -8,12 +8,12 @@ def build_all(client, project_id):
     flow = project.get_flow()
     graph = flow.get_graph()
     for k,v in graph.data.get('nodes').items():
-        if v.get('successors') == [] and k != 'unknown' and k != 'eval':     
+        if v.get('successors') == [] and k != 'unknown' and k != 'eval':
             definition = {
                 "type" : 'RECURSIVE_FORCED_BUILD',
                 "outputs" : [{"id": k}]
             }
-            print('Building dataset {}'.format(k)) 
+            print('Building dataset {}'.format(k))
             try:
                 job = project.start_job(definition)
             except Exception as err:
@@ -36,14 +36,23 @@ def list_user_folders(client):
 
 def walk_folder_tree(folder, depth=0):
     """
-    Depth-first, deepest first. Yields (folder, depth, project_keys).
+    Depth-first, deepest first. Yields (folder, depth, project_keys, child_folders).
+
+    child_folders is this folder's direct children, fetched once up front
+    (before any of them can be deleted by the caller). Callers must use this
+    list instead of calling folder.list_child_folders() again later in the
+    walk: by that point some of those children may already have been deleted,
+    and re-listing would try to re-fetch a folder id that no longer exists
+    on the server (raising UnauthorizedException/NotFoundException).
+
     Ordering guarantees children are yielded before their parent,
     so deleting in iteration order is always safe.
     """
-    for child in folder.list_child_folders():
+    child_folders = folder.list_child_folders()
+    for child in child_folders:
         for item in walk_folder_tree(child, depth + 1):
             yield item
-    yield folder, depth, folder.list_project_keys()
+    yield folder, depth, folder.list_project_keys(), child_folders
 
 def get_user_folder_by_id(client, user_id, create_if_not_exist_TF):
     """Return the user's project folder under SANDBOX, or None."""
@@ -79,12 +88,12 @@ def get_project_folder_by_num(client, project_id_prefix, user_num):
     
     return project_folder
 
-def duplicate_project_by_id(client, project_id, user_id, dest_folder, build_TF):
+def duplicate_project_by_id(client, project_id, user_id, dest_folder):
     # get original project
     project = client.get_project(project_id)
     project_meta = project.get_metadata()
     project_name = project_meta['label']
-    
+
     # duplicate project
     new_project_id = project_id + '_' + user_id
     print('Duplicating ' + new_project_id)
@@ -96,24 +105,17 @@ def duplicate_project_by_id(client, project_id, user_id, dest_folder, build_TF):
 
         # set tag
         project_metadata = new_project.get_metadata()
-        project_metadata['tags'] = ['duplicated']
-        project_metadata['tags'] = [project_name]
+        project_metadata['tags'] = ['duplicated', project_name]
         new_project.set_metadata(project_metadata)
-
-        # build all datasets
-        if build_TF == True:
-            build_all(client, new_project_id)
-        else:
-            print("skip build all")
 
     except Exception as err:
         print('duplicate failed')
         print("Error = ", str(err))
-        return ""
+        return None
     
     return new_project_id
 
-def duplicate_project_by_num(client, project_id, user_num, dest_folder, build_TF):
+def duplicate_project_by_num(client, project_id, user_num, dest_folder):
     project = client.get_project(project_id)
     project_name = project.get_metadata()['label']
 
@@ -133,9 +135,6 @@ def duplicate_project_by_num(client, project_id, user_num, dest_folder, build_TF
     metadata = new_project.get_metadata()
     metadata['tags'] = ['duplicated', project_name]
     new_project.set_metadata(metadata)
-
-#    if build_TF:
-#        build_all(client, new_project_id)
 
     return new_project_id
 
