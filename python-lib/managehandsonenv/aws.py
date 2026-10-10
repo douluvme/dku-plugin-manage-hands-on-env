@@ -1,11 +1,20 @@
-"""boto3 helpers for the workshop infrastructure macros."""
+"""boto3 helpers for the workshop infrastructure features."""
 from typing import Any, Dict, Optional, Tuple
-
-import boto3
 
 
 def boto_client(service: str, preset: Dict[str, Any], region: str):
-    """A boto3 client for ``service`` authenticated with the ``aws-credentials`` preset."""
+    """A boto3 client for ``service`` authenticated with the ``aws-credentials`` preset.
+
+    ``boto3`` is imported here, not at module level, so that the library (and the
+    macros that never touch AWS) can be imported where it is not installed.
+    """
+    try:
+        import boto3
+    except ImportError:
+        raise RuntimeError(
+            "boto3 is not installed: build the plugin code environment "
+            "(Plugins > manage-hands-on-env > Settings > Code env)"
+        )
     return boto3.client(
         service,
         region_name=region,
@@ -14,7 +23,7 @@ def boto_client(service: str, preset: Dict[str, Any], region: str):
     )
 
 
-def ec2_instance_details(ec2, instance_id: str) -> Tuple[Optional[str], Optional[str]]:
+def ec2_instance_details(ec2, instance_id: str, log=print) -> Tuple[Optional[str], Optional[str]]:
     """``(name, state)`` of an EC2 instance, or ``(None, None)`` if it cannot be described."""
     try:
         response = ec2.describe_instances(InstanceIds=[instance_id])
@@ -26,5 +35,5 @@ def ec2_instance_details(ec2, instance_id: str) -> Tuple[Optional[str], Optional
         name = next((tag["Value"] for tag in tags if tag["Key"] == "Name"), None)
         return name, instance["State"]["Name"]
     except Exception as e:
-        print("Error getting instance details: {}".format(e))
+        log("Error getting instance details: {}".format(e))
         return None, None
