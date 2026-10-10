@@ -9,7 +9,11 @@
     // v1.0.7 release note : added loan adviosr agent starter
     // v1.0.8 release note : made various changes to duplicate, delete, and change ownership macros
     // v1.0.9 release note : added delete everything from all user folders option
-    "version": "1.0.9",
+    // v1.1.0 release note : Plan A consolidation. Shared HandsOnRunnable base class (admin-project guard now raises),
+    //                       common_functions split into users/projects/aws/results, fixed 3-4 NameError, 3-1 and 3-3
+    //                       duplicate "params" keys and the aws-credentials preset id, removed the [OLD] delete macro,
+    //                       added scripts/check_descriptors.py
+    "version": "1.1.0",
 
     // Meta data for display purposes:
     "meta": {
@@ -22,7 +26,6 @@
         "author": "jaeha",
 
         // icon: must be one of the FontAwesome 5.15.4 icons, complete list here at https://fontawesome.com/v5/docs/
-#        "icon": "fas fa-puzzle-piece",
         "icon": "fas fa-hammer",
 
         // List of tags for filtering the list of plugins

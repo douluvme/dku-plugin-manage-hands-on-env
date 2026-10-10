@@ -9,7 +9,6 @@
         "category" : "⚠️ Hands-on 2: Housekeeping",
 
         // icon: must be one of the FontAwesome 5.15.4 icons, complete list here at https://fontawesome.com/v5/docs/
-#        "icon": "fas fa-trash fa-1x"
         "icon": "icon-trash"
     },
 
@@ -34,7 +33,6 @@
             "selectChoices" : [
               { "value": "user_num", "label": "starter projects in user folders using user num"},
               { "value": "all_user_folders", "label": "all projects in all user folders"},
-#              { "value": "root_folder", "label": "all projects in root folder"},
               { "value": "sandbox", "label": "all projects in sandbox folder"}
             ],
             "defaultValue": "user_num",
