@@ -1,26 +1,16 @@
-# This file is the actual code for the Python runnable manage-starter-project
-from dataiku.runnables import Runnable
-import dataiku
-#from managehandsonenv.common_functions import *
-import time
+# This file is the actual code for the Python runnable 2-4-stop-sharing-datasets
+from managehandsonenv.base import HandsOnRunnable
 
-class MyRunnable(Runnable):
-    def __init__(self, project_key, config, plugin_config):
-        self.project_key = project_key
-        self.config = config
-        self.plugin_config = plugin_config
-        
+
+class MyRunnable(HandsOnRunnable):
+    """Stop sharing READONLY.credit_score with every project except the KO4EVAL*
+    starters and DEMO_KO_CARDFRAUD."""
+
     def get_progress_target(self):
         return (1, 'NONE')
 
-    def run(self, progress_callback):
-        config = self.config
-        client = dataiku.api_client()
-
-        if self.project_key != 'ADMINV4':
-            print("This macro can be run only from admin project")
-            time.sleep(10)
-            return None
+    def execute(self, progress_callback):
+        client = self.client
 
         project = client.get_project("READONLY")
 
@@ -30,7 +20,7 @@ class MyRunnable(Runnable):
 
         index_list = []
 
-        for x in range(0,len(rules)):
+        for x in range(0, len(rules)):
             if rules[x]['targetProject'].startswith('KO4EVAL') or rules[x]['targetProject'] == 'DEMO_KO_CARDFRAUD':
                 pass
             else:

@@ -1,18 +1,17 @@
-# This file is the actual code for the Python runnable manage-starter-project
-from dataiku.runnables import Runnable
-import dataiku
+# This file is the actual code for the Python runnable 2-1-delete-starter-projects
+from managehandsonenv.base import HandsOnRunnable
 from managehandsonenv.common_functions import *
 import time
 import traceback
 
 
-class MyRunnable(Runnable):
+class MyRunnable(HandsOnRunnable):
+    """Delete hands-on projects: by user number, everything under every user folder,
+    or everything in the SANDBOX (or root) folder. Dry-run unless delete_TF is set."""
+
     def __init__(self, project_key, config, plugin_config):
-        self.project_key = project_key
-        self.config = config
-        self.plugin_config = plugin_config
-        client = dataiku.api_client()
-        self.client = client
+        super().__init__(project_key, config, plugin_config)
+        client = self.client
 
         if config["delete_type"] == 'user_num':
             project_keys = (config["project_keys_list"]
@@ -26,7 +25,7 @@ class MyRunnable(Runnable):
             for user_folder in list_user_folders(client):
                 for _folder, _depth, project_keys in walk_folder_tree(user_folder):
                     total += len(project_keys) + 1
-                    
+
             print(f"progress target = {total}")
             self.total_progress_target = max(total, 1)
         else:
@@ -37,7 +36,7 @@ class MyRunnable(Runnable):
     def get_progress_target(self):
         return (self.total_progress_target, 'NONE')
 
-    def run(self, progress_callback):
+    def execute(self, progress_callback):
         config = self.config
         client = self.client
         delete_type = config["delete_type"]
@@ -48,11 +47,6 @@ class MyRunnable(Runnable):
         failures = []
         kept_folders = set()
         progress = 1
-
-        if self.project_key != 'ADMINV4':
-            print("This macro can be run only from admin project")
-            time.sleep(5)
-            return None
 
         if delete_type == 'user_num':
             number_of_users = int(config["user_count"]) + 1
@@ -180,8 +174,7 @@ class MyRunnable(Runnable):
                         traceback.print_exc()
                         failures.append((folder_name, str(e)))
                         kept_folders.add(folder_name)
-                        
-                        
+
         else:
             keep_project_keys = list(config["projects_to_keep"])
 

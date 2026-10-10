@@ -1,19 +1,14 @@
-# This file is the actual code for the Python runnable manage-starter-project
-from dataiku.runnables import Runnable
-import dataiku
+# This file is the actual code for the Python runnable 1-1-duplicate-starter-projects
+from managehandsonenv.base import HandsOnRunnable
 from managehandsonenv.common_functions import *
-import time
 import traceback
 
 
-class MyRunnable(Runnable):
-    """The base interface for a Python runnable"""
+class MyRunnable(HandsOnRunnable):
+    """Duplicate the selected starter projects once per user (user99 + user01..NN)."""
 
     def __init__(self, project_key, config, plugin_config):
-        self.project_key = project_key
-        self.config = config
-        self.plugin_config = plugin_config
-        self.client = dataiku.api_client()
+        super().__init__(project_key, config, plugin_config)
         self.number_of_users = int(config["user_count"]) + 1
         self.dup_project_keys = self._get_project_keys()
         self.total_progress_target = len(self.dup_project_keys) * self.number_of_users
@@ -28,14 +23,10 @@ class MyRunnable(Runnable):
     def get_progress_target(self):
         return (self.total_progress_target, 'NONE')
 
-    def run(self, progress_callback):
+    def execute(self, progress_callback):
         config = self.config
         client = self.client
         build_TF = config["build_TF"]
-        overwrite_TF = config.get("overwrite_TF", False)
-
-        if self.project_key != 'ADMINV4':
-            raise Exception("This macro can be run only from the ADMINV4 admin project")
 
         print(f"Number of users = {self.number_of_users}")
 
