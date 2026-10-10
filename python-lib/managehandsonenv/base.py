@@ -9,6 +9,11 @@ class HandsOnRunnable(Runnable):
 
     Subclasses keep the ``MyRunnable`` class name (DSS loads it by name),
     implement :meth:`execute` and may override :meth:`get_progress_target`.
+
+    Each ``runnable.py`` must ``from managehandsonenv import base`` and define
+    ``class MyRunnable(base.HandsOnRunnable)``. Never ``from managehandsonenv.base
+    import HandsOnRunnable``: DSS scans the macro module for classes inheriting
+    ``Runnable`` and refuses to load it when it finds more than one.
     """
 
     ADMIN_PROJECT_KEY = "ADMINV4"

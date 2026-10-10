@@ -1,9 +1,9 @@
 # This file is the actual code for the Python runnable 3-2-get-db-class
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.aws import boto_client, RDS_INSTANCE_ID
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Report the current instance class and status of the workshop RDS database."""
 
     def execute(self, progress_callback):

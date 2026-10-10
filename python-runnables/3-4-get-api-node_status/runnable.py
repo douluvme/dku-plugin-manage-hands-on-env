@@ -1,9 +1,9 @@
 # This file is the actual code for the Python runnable 3-4-get-api-node_status
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.aws import boto_client, ec2_instance_details, API_NODE_INSTANCE_ID
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Report whether the EC2 instance hosting the workshop API node is running."""
 
     def execute(self, progress_callback):

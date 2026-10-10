@@ -1,8 +1,8 @@
 # This file is the actual code for the Python runnable 2-4-stop-sharing-datasets
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Stop sharing READONLY.credit_score with every project except the KO4EVAL*
     starters and DEMO_KO_CARDFRAUD."""
 

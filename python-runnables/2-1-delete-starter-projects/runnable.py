@@ -1,5 +1,5 @@
 # This file is the actual code for the Python runnable 2-1-delete-starter-projects
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.users import (
     SANDBOX_FOLDER, iter_user_nums, user_id, get_user_folder, list_user_folders, walk_folder_tree,
 )
@@ -9,7 +9,7 @@ import time
 import traceback
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Delete hands-on projects: by user number, everything under every user folder,
     or everything in the SANDBOX (or root) folder. Dry-run unless delete_TF is set."""
 

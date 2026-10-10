@@ -1,10 +1,10 @@
 # This file is the actual code for the Python runnable 1-2-change-owner-starter-projects
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.users import iter_user_nums_range, user_id
 from managehandsonenv.projects import suffixed_key, set_project_owner
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Set the owner of <project>_NN to userNN (or back to admin) for user99 and
     users user_num_from..user_num_to."""
 

@@ -1,11 +1,11 @@
 # This file is the actual code for the Python runnable 1-3-change-owner-root-projects-to-admin
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.users import SANDBOX_FOLDER
 from managehandsonenv.projects import set_project_owner
 from managehandsonenv.results import html_key, render_failures
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Set the owner of every project directly under the SANDBOX folder to admin."""
 
     def get_progress_target(self):

@@ -1,10 +1,10 @@
 # This file is the actual code for the Python runnable 3-1-modify-db-class
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.aws import boto_client, RDS_INSTANCE_ID
 import time
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Change the instance class of the workshop RDS database."""
 
     def get_progress_target(self):

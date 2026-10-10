@@ -1,8 +1,8 @@
 # This file is the actual code for the Python runnable 2-3-clean-deployed-apis-and-bundles
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Remove API deployments/services and project deployments/bundles from the
     deployers. Project deployments and bundles whose id starts with READONLY are kept."""
 

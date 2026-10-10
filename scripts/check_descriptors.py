@@ -60,8 +60,18 @@ def check(path):
                 preset_dir = ROOT / "parameter-sets" / p.get("parameterSetId", "")
                 if not (preset_dir / "parameter-set.json").is_file():
                     problems.append(f"param {p.get('name')!r} references unknown preset {p.get('parameterSetId')!r}")
-        if not (path.parent / "runnable.py").is_file():
+        code = path.parent / "runnable.py"
+        if not code.is_file():
             problems.append("no runnable.py next to it")
+        else:
+            # DSS scans runnable.py for classes inheriting Runnable and refuses the macro when it
+            # finds more than one, so the base class must be reached through its module.
+            lines = code.read_text(encoding="utf-8").splitlines()
+            if "class MyRunnable(base.HandsOnRunnable):" not in lines:
+                problems.append("runnable.py must define `class MyRunnable(base.HandsOnRunnable):`")
+            if any(line.startswith("from managehandsonenv.base import") for line in lines):
+                problems.append("runnable.py must `from managehandsonenv import base`, not import names from it "
+                                "(DSS: \"Multiple classes inheriting Runnable\")")
 
     if path.name == "plugin.json":
         for p in data.get("params", []):

@@ -1,9 +1,9 @@
 # This file is the actual code for the Python runnable 2-2-enable-disable-attendee-users
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.users import is_attendee_login
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Enable or disable every userNN login except the instructor (user99)."""
 
     def execute(self, progress_callback):
