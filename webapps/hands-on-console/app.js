@@ -175,6 +175,13 @@
     $("hoc-history-dot").hidden = !runningId;
   }
 
+  // Narrow screens: the sidebar is an off-canvas drawer opened by the hamburger button.
+  function setDrawerOpen(open) {
+    $("hoc-sidebar").classList.toggle("open", open);
+    $("hoc-backdrop").hidden = !open;
+    $("hoc-hamburger").setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
   function setSidebarCollapsed(collapsed) {
     var sidebar = $("hoc-sidebar");
     sidebar.classList.toggle("collapsed", collapsed);
@@ -201,6 +208,7 @@
   // ---- form -------------------------------------------------------------------
   function selectFeature(featureId) {
     markSelected(featureId);
+    setDrawerOpen(false);
     showTab("run");
     api("/api/features/" + encodeURIComponent(featureId) + "/form").then(function (schema) {
       state.feature = featureId;
@@ -217,10 +225,14 @@
     var form = $("hoc-form");
     form.innerHTML = "";
     schema.params.forEach(function (param) { form.appendChild(renderField(param)); });
-    form.addEventListener("input", applyVisibility);
-    form.addEventListener("change", applyVisibility);
     applyVisibility();
     updateRunButton();
+  }
+
+  function onFormEdit(event) {
+    applyVisibility();
+    var field = event.target && event.target.closest ? event.target.closest(".hoc-field") : null;
+    if (field && field.classList.contains("invalid")) setFieldError(field.getAttribute("data-name"), "");
   }
 
   function renderField(param) {
@@ -265,10 +277,55 @@
         inputs = [el("input", { type: "text", name: name, value: dflt !== undefined ? dflt : "" })];
     }
     var help = param.description ? [el("div", { class: "hoc-help", text: param.description })] : [];
-    return el("div", { class: "hoc-field", "data-name": name, "data-condition": param.visibilityCondition || "" }, [
-      el("label", { text: param.label || name + (param.mandatory ? " *" : "") }),
-      el("div", { class: "hoc-input" }, inputs.concat(help))
+    var labelChildren = [document.createTextNode(param.label || name)];
+    if (param.mandatory) labelChildren.push(el("span", { class: "hoc-req", text: "*", title: "required" }));
+    var error = el("div", { class: "hoc-field-error", role: "alert", hidden: "hidden" });
+    return el("div", { class: "hoc-field", "data-name": name, "data-condition": param.visibilityCondition || "",
+                       "data-mandatory": param.mandatory ? "1" : "" }, [
+      el("label", {}, labelChildren),
+      el("div", { class: "hoc-input" }, inputs.concat(help, [error]))
     ]);
+  }
+
+  function isEmptyValue(param, value) {
+    switch (param.type) {
+      case "INT":
+      case "DOUBLE": return value === null || value === undefined || isNaN(value);
+      case "BOOLEAN": return false;
+      case "MULTISELECT":
+      case "STRINGS": return !value || value.length === 0;
+      default: return value === undefined || value === null || String(value).trim() === "";
+    }
+  }
+
+  function setFieldError(name, message) {
+    var field = document.querySelector('.hoc-field[data-name="' + name + '"]');
+    if (!field) return;
+    var error = field.querySelector(".hoc-field-error");
+    error.textContent = message || "";
+    error.hidden = !message;
+    field.classList.toggle("invalid", !!message);
+    Array.prototype.forEach.call(field.querySelectorAll("input, select, textarea"), function (input) {
+      if (message) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
+    });
+  }
+
+  // Mandatory visible fields must have a value; returns the name of the first invalid one or null.
+  function validateForm() {
+    var model = readForm();
+    var firstInvalid = null;
+    (state.schema ? state.schema.params : []).forEach(function (param) {
+      var visible = evalCondition(param.visibilityCondition, model);
+      var invalid = visible && param.mandatory && isEmptyValue(param, model[param.name]);
+      setFieldError(param.name, invalid ? "This field is required." : "");
+      if (invalid && !firstInvalid) firstInvalid = param.name;
+    });
+    if (firstInvalid) {
+      var field = document.querySelector('.hoc-field[data-name="' + firstInvalid + '"]');
+      var input = field && field.querySelector("input, select, textarea");
+      if (input) input.focus();
+    }
+    return firstInvalid;
   }
 
   function readForm() {
@@ -327,7 +384,8 @@
 
   // ---- running ----------------------------------------------------------------
   function runFeature() {
-    if (!state.schema) return;
+    if (!state.schema || $("hoc-run").disabled) return;
+    if (validateForm()) return;
     var params = visibleParams();
     var needsConfirm = state.schema.destructive && ("delete_TF" in params ? !!params.delete_TF : true);
     if (needsConfirm) {
@@ -458,9 +516,17 @@
   // ---- boot -------------------------------------------------------------------
   function boot() {
     $("hoc-run").addEventListener("click", runFeature);
+    // Enter inside a field runs the feature instead of letting the browser reload the page
+    $("hoc-form").addEventListener("submit", function (event) { event.preventDefault(); runFeature(); });
+    $("hoc-form").addEventListener("input", onFormEdit);
+    $("hoc-form").addEventListener("change", onFormEdit);
     $("hoc-collapse").addEventListener("click", function () {
       setSidebarCollapsed(!$("hoc-sidebar").classList.contains("collapsed"));
     });
+    $("hoc-hamburger").addEventListener("click", function () {
+      setDrawerOpen(!$("hoc-sidebar").classList.contains("open"));
+    });
+    $("hoc-backdrop").addEventListener("click", function () { setDrawerOpen(false); });
     Array.prototype.forEach.call(document.querySelectorAll(".hoc-tab"), function (tab) {
       tab.addEventListener("click", function () { showTab(tab.getAttribute("data-tab")); });
     });

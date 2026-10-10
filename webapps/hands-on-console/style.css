@@ -138,6 +138,8 @@
 .hoc-title { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
 .hoc-title-main { font-size: 20px; font-weight: 600; }
 .hoc-title-sub { font-size: 13px; color: #777; }
+.hoc-hamburger { display: none; border: 1px solid #c9d2dc; background: #fff; border-radius: 4px; width: 32px; height: 30px; font-size: 16px; cursor: pointer; align-self: center; }
+.hoc-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); z-index: 9; }
 
 .hoc-banner {
   margin: 6px 0 10px;
@@ -197,6 +199,10 @@
 .hoc-field textarea { min-height: 72px; font-family: Menlo, Consolas, monospace; }
 .hoc-field .hoc-input > input[type="checkbox"] { align-self: flex-start; margin: 9px 0 6px 2px; }
 .hoc-field .hoc-help { font-size: 12px; color: #777; }
+.hoc-field .hoc-req { color: #c62828; margin-left: 3px; font-weight: 700; }
+.hoc-field .hoc-field-error { font-size: 12px; color: #b3261e; }
+.hoc-field.invalid input, .hoc-field.invalid select, .hoc-field.invalid textarea { border-color: #b3261e; }
+.hoc-field.invalid .hoc-checklist { outline: 1px solid #b3261e; outline-offset: 4px; border-radius: 3px; }
 .hoc-checklist { display: flex; flex-direction: column; gap: 2px; }
 .hoc-checklist label { display: flex; align-items: center; font-weight: normal; padding: 3px 0; font-size: 13px; cursor: pointer; }
 .hoc-checklist input { margin: 0 10px 0 2px; }
@@ -268,3 +274,33 @@
 .hoc-history li { display: flex; gap: 10px; align-items: center; font-size: 13px; cursor: pointer; padding: 4px 6px; border-radius: 4px; }
 .hoc-history li:hover { background: #f3f6f9; }
 .hoc-history .hoc-when { color: #777; font-variant-numeric: tabular-nums; min-width: 70px; }
+
+/* ---- narrow screens: off-canvas menu, single-column form ----------------- */
+@media (max-width: 760px) {
+  .hoc { display: block; }
+  .hoc-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    width: 260px;
+    flex-basis: auto;
+    transform: translateX(-100%);
+    transition: transform 0.2s;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+  }
+  .hoc-sidebar.open { transform: translateX(0); }
+  .hoc-sidebar.collapsed { width: 260px; }                 /* the collapse toggle has no meaning here */
+  .hoc-sidebar.collapsed .hoc-menu, .hoc-sidebar.collapsed .hoc-sidebar-title { display: block; }
+  .hoc-collapse { display: none; }
+  .hoc-hamburger { display: inline-block; }
+  .hoc-main { max-width: none; padding: 0 16px 24px; }
+  .hoc-title { flex-wrap: wrap; gap: 8px 12px; }
+  .hoc-title-main { font-size: 17px; }
+  .hoc-form { grid-template-columns: 1fr; gap: 4px 0; }
+  .hoc-field label { padding-top: 8px; }
+  .hoc-field .hoc-input { margin-bottom: 6px; }
+  .hoc-field input[type="text"], .hoc-field input[type="number"], .hoc-field input[type="password"],
+  .hoc-field select, .hoc-field textarea { max-width: none; }
+  .hoc-history li { flex-wrap: wrap; }
+}
