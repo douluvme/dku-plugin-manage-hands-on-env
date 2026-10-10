@@ -11,3 +11,8 @@ version-tags.json
 .htmlcov
 .DS_Store
 .idea
+
+# development tooling
+__pycache__/
+.pytest_cache/
+.ruff_cache/

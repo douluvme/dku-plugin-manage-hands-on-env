@@ -1,0 +1,4 @@
+# Development-only tools (not installed in the DSS code environment; see requirements.json for that)
+pytest>=7
+ruff>=0.4
+pyflakes>=3

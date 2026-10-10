@@ -24,9 +24,16 @@
             ],
             "defaultValue": "start",
             "mandatory": true
+        },
+        {
+            "name": "aws_account",
+            "label": "AWS Account",
+            "type": "PRESET",
+            "parameterSetId": "aws-credentials",
+            "mandatory": true
         }
     ],
-    
+
     /* whether the runnable's code is untrusted */
     "impersonate": false,
 
@@ -62,15 +69,6 @@
     "macroRoles": [
         {
             "type": "PROJECT_MACROS"
-        } 
-    ],
-    "params": [
-    {
-        "name": "aws_account",
-        "label": "AWS Account",
-        "type": "PRESET",
-        "parameterSetId": "aws-credentials",
-        "mandatory": true
-    }
+        }
     ]
 }
