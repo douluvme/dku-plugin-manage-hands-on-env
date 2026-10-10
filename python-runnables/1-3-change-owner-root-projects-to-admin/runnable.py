@@ -1,6 +1,7 @@
 # This file is the actual code for the Python runnable manage-starter-project
 from managehandsonenv.base import HandsOnRunnable
-from managehandsonenv.common_functions import set_project_owner
+from managehandsonenv.projects import set_project_owner
+from managehandsonenv.results import key_tag
 
 
 class MyRunnable(HandsOnRunnable):
@@ -18,12 +19,9 @@ class MyRunnable(HandsOnRunnable):
         project_list = sandbox_folder.list_project_keys()
 
         for project_id in project_list:
-            try:
-                print(f"Update {project_id}")
-                total_update_count += set_project_owner(client, project_id, 'admin')
-                result_string = f"{result_string}&lt;{project_id}&gt;</br>"
-            except Exception as e:
-                print(f"{project_id} update failed: {e}")
+            if set_project_owner(client, project_id, 'admin'):
+                total_update_count += 1
+                result_string = f"{result_string}{key_tag(project_id)}</br>"
 
         progress_callback(1)
 

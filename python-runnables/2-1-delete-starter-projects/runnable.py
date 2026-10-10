@@ -3,11 +3,13 @@ import time
 import traceback
 
 from managehandsonenv.base import HandsOnRunnable
-from managehandsonenv.common_functions import (
-    delete_project_by_num,
-    get_user_folder_by_id,
+from managehandsonenv.projects import delete_project, project_exists, suffixed_key
+from managehandsonenv.results import key_tag, render_result
+from managehandsonenv.users import (
+    get_user_folder,
+    iter_user_nums,
     list_user_folders,
-    project_exists,
+    user_id,
     walk_folder_tree,
 )
 
@@ -19,17 +21,16 @@ class MyRunnable(HandsOnRunnable):
         super().__init__(project_key, config, plugin_config)
         config = self.config
         client = self.client
+        self.sandbox_folder = 'SANDBOX'
 
         if config["delete_type"] == 'user_num':
-            project_keys = (config["project_keys_list"]
-                            if config["key_select_method"] == "from_list"
-                            else config["project_keys_input"])
+            project_keys = self._get_project_keys()
             self.total_progress_target = len(project_keys) * (int(config["user_count"]) + 1)
         elif config["delete_type"] == 'sandbox':
-            self.total_progress_target = len(client.get_project_folder('SANDBOX').list_project_keys())
+            self.total_progress_target = len(client.get_project_folder(self.sandbox_folder).list_project_keys())
         elif config["delete_type"] == 'all_user_folders':
             total = 0
-            for user_folder in list_user_folders(client):
+            for user_folder in list_user_folders(client, self.sandbox_folder):
                 for _folder, _depth, project_keys in walk_folder_tree(user_folder):
                     total += len(project_keys) + 1
             self.total_progress_target = max(total, 1)
@@ -37,6 +38,12 @@ class MyRunnable(HandsOnRunnable):
             self.total_progress_target = len(client.get_root_project_folder().list_project_keys())
 
         print(f"Progress target = {self.total_progress_target}")
+
+    def _get_project_keys(self):
+        config = self.config
+        if config["key_select_method"] == "from_list":
+            return config["project_keys_list"]
+        return config["project_keys_input"]
 
     def get_progress_target(self):
         return (self.total_progress_target, 'NONE')
@@ -54,41 +61,30 @@ class MyRunnable(HandsOnRunnable):
         progress = 1
 
         if delete_type == 'user_num':
-            number_of_users = int(config["user_count"]) + 1
-            print(f"Number of users = {number_of_users}")
-            del_project_keys = (config["project_keys_list"]
-                                if config["key_select_method"] == "from_list"
-                                else config["project_keys_input"])
+            user_count = int(config["user_count"])
+            print(f"Number of users = {user_count + 1}")
+            del_project_keys = self._get_project_keys()
 
-            for x in range(number_of_users):
-                user_num = '99' if x == 0 else str(x).zfill(2)
-                result_string = f"{result_string}<br/><b>user{user_num}</b> :"
+            for num in iter_user_nums(user_count):
+                login = user_id(num)
+                result_string = f"{result_string}<br/><b>{login}</b> :"
 
-                user_folder = get_user_folder_by_id(client, 'user' + user_num, create_if_not_exist_TF=False)
+                user_folder = get_user_folder(client, login, self.sandbox_folder, create=False)
 
                 for project in del_project_keys:
                     progress_callback(progress)
                     progress += 1
 
-                    if not project_exists(client, f"{project}_{user_num}"):
+                    target_key = suffixed_key(project, num)
+                    if not project_exists(client, target_key):
                         continue
 
-                    if delete_TF:
-                        try:
-                            result = delete_project_by_num(client, project, user_num)
-                        except Exception as e:
-                            print(f"{project}_{user_num} delete failed: {e}")
-                            traceback.print_exc()
-                            failures.append((f"{project}_{user_num}", str(e)))
-                            continue
-
-                        if result != 1:
-                            print(f"{project}_{user_num} delete returned {result}")
-                            failures.append((f"{project}_{user_num}", f"returned {result}"))
-                            continue
+                    if delete_TF and not delete_project(client, target_key):
+                        failures.append((target_key, "delete failed (see macro log)"))
+                        continue
 
                     total_delete_count += 1
-                    result_string = f"{result_string} &lt;{project}_{user_num}&gt;"
+                    result_string = f"{result_string} {key_tag(target_key)}"
 
                 if user_folder is None:
                     print("Skip deleting user folder")
@@ -106,7 +102,7 @@ class MyRunnable(HandsOnRunnable):
             keep_project_keys = set(config["projects_to_keep"])
             keep_project_keys.add(self.project_key)
 
-            user_folders = list_user_folders(client)
+            user_folders = list_user_folders(client, self.sandbox_folder)
             print(f"Found {len(user_folders)} user folder(s)")
 
             for user_folder in user_folders:
@@ -126,26 +122,13 @@ class MyRunnable(HandsOnRunnable):
                             folder_clean = False
                             continue
 
-                        if not delete_TF:
-                            total_delete_count += 1
-                            result_string = f"{result_string} &lt;{del_project_id}&gt;"
-                            continue
-
-                        print(f"{indent}Delete {del_project_id}")
-                        try:
-                            client.get_project(del_project_id).delete(
-                                clear_managed_datasets=True,
-                                clear_job_and_scenario_logs=True,
-                            )
-                        except Exception as e:
-                            print(f"{indent}{del_project_id} delete failed: {e}")
-                            traceback.print_exc()
-                            failures.append((del_project_id, str(e)))
+                        if delete_TF and not delete_project(client, del_project_id):
+                            failures.append((del_project_id, "delete failed (see macro log)"))
                             folder_clean = False
                             continue
 
                         total_delete_count += 1
-                        result_string = f"{result_string} &lt;{del_project_id}&gt;"
+                        result_string = f"{result_string} {key_tag(del_project_id)}"
 
                     progress_callback(progress)
                     progress += 1
@@ -191,7 +174,7 @@ class MyRunnable(HandsOnRunnable):
                 print(f"Keep {project_key}")
 
             if delete_type == 'sandbox':
-                folder_to_clean = client.get_project_folder('SANDBOX')
+                folder_to_clean = client.get_project_folder(self.sandbox_folder)
             else:
                 folder_to_clean = client.get_root_project_folder()
 
@@ -207,35 +190,28 @@ class MyRunnable(HandsOnRunnable):
 
                 if not delete_TF:
                     total_delete_count += 1
-                    result_string = f"{result_string}&lt;{del_project_id}&gt;<br/>"
+                    result_string = f"{result_string}{key_tag(del_project_id)}<br/>"
                     time.sleep(0.07)
                     continue
 
-                print(f"Delete {del_project_id}")
-                try:
-                    client.get_project(del_project_id).delete(
-                        clear_managed_datasets=True,
-                        clear_job_and_scenario_logs=True,
-                    )
-                except Exception as e:
-                    print(f"{del_project_id} delete failed: {e}")
-                    traceback.print_exc()
-                    failures.append((del_project_id, str(e)))
+                if not delete_project(client, del_project_id):
+                    failures.append((del_project_id, "delete failed (see macro log)"))
                     continue
 
                 total_delete_count += 1
-                result_string = f"{result_string}&lt;{del_project_id}&gt;<br/>"
+                result_string = f"{result_string}{key_tag(del_project_id)}<br/>"
 
         if delete_TF:
-            return_msg = f"<h4>Successfully deleted {total_delete_count} project(s)</h4>{result_string}"
+            title = f"Successfully deleted {total_delete_count} project(s)"
+            body = result_string
         else:
-            return_msg = f"<h4>Identified {total_delete_count} project(s) to delete</h4><br/>{result_string}"
+            title = f"Identified {total_delete_count} project(s) to delete"
+            body = f"<br/>{result_string}"
 
         verb = "Deleted" if delete_TF else "Identified"
-        return_msg += f"<h4>{verb} {total_folder_count} user folder(s)</h4>"
-
-        if failures:
-            rows = "".join(f"<li>&lt;{k}&gt; — {reason}</li>" for k, reason in failures)
-            return_msg += f"<h4>{len(failures)} failure(s)</h4><ul>{rows}</ul>"
-
-        return return_msg
+        return render_result(
+            title,
+            body,
+            extra_sections=[(f"{verb} {total_folder_count} user folder(s)", [])],
+            failures=failures,
+        )

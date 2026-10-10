@@ -1,6 +1,7 @@
 # This file is the actual code for the Python runnable manage-starter-project
 from managehandsonenv.base import HandsOnRunnable
-from managehandsonenv.common_functions import set_project_owner_by_num
+from managehandsonenv.projects import set_project_owner, suffixed_key
+from managehandsonenv.users import iter_user_nums_range, user_id
 
 
 class MyRunnable(HandsOnRunnable):
@@ -13,15 +14,16 @@ class MyRunnable(HandsOnRunnable):
         user_num_to = int(config["user_num_to"])
         admin_TF = config["admin_TF"]
 
-        total_update_count = 0
         project_key = (config["project_key_select"]
                        if config["key_select_method"] == "from_list"
                        else config["project_key_input"])
 
-        # 99 for instructor
-        total_update_count += set_project_owner_by_num(client, project_key, '99', set_owner_to_admin_TF=admin_TF)
+        total_update_count = 0
 
-        for x in range(user_num_from, user_num_to + 1):
-            total_update_count += set_project_owner_by_num(client, project_key, str(x).zfill(2), set_owner_to_admin_TF=admin_TF)
+        # the instructor (user99) is always included
+        for num in iter_user_nums_range(user_num_from, user_num_to):
+            owner = 'admin' if admin_TF else user_id(num)
+            if set_project_owner(client, suffixed_key(project_key, num), owner):
+                total_update_count += 1
 
         return f"Successfully changed ownership for {total_update_count} project(s)"
