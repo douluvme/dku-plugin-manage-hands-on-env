@@ -9,7 +9,12 @@
     // v1.0.7 release note : added loan adviosr agent starter
     // v1.0.8 release note : made various changes to duplicate, delete, and change ownership macros
     // v1.0.9 release note : added delete everything from all user folders option
-    "version": "1.0.9",
+    // v1.1.0 release note : Plan C refactor - shared HandsOnRunnable base class and split library,
+    //                       plugin-level settings (admin project, sandbox folder, AWS region/ids, ...),
+    //                       single starter-project list, delete strategies with identical dry-run/real-run
+    //                       reports, unit tests and `make check`; fixed the API-node-status NameError,
+    //                       duplicate "params" keys and the aws-credentials preset id.
+    "version": "1.1.0",
 
     // Meta data for display purposes:
     "meta": {
