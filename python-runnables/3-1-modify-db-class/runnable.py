@@ -1,56 +1,34 @@
-# This file is the actual code for the Python runnable manage-starter-project
-from dataiku.runnables import Runnable
-import dataiku
-#from managehandsonenv.common_functions import *
+# Modify the RDS DB instance class of the workshop database.
 import time
-import boto3
 
-class MyRunnable(Runnable):
-    def __init__(self, project_key, config, plugin_config):
-        self.project_key = project_key
-        self.config = config
-        self.plugin_config = plugin_config
-        
+from managehandsonenv.aws import boto_client
+from managehandsonenv.base import HandsOnRunnable
+
+
+class MyRunnable(HandsOnRunnable):
     def get_progress_target(self):
         return (1, 'NONE')
 
-    def run(self, progress_callback):
-        preset = self.config.get("aws_account", {})
-        aws_access_key_id = preset.get("aws_access_key_id")
-        aws_secret_access_key = preset.get("aws_secret_access_key")
-        # use as before, e.g. building a boto3 client
-        config = self.config
-        client = dataiku.api_client()
+    def execute(self, progress_callback):
+        db_class = self.config["db_class"]
+        wait_TF = self.config["wait_TF"]
+        db_instance_id = self.settings.rds_instance_id
 
-        if self.project_key != 'ADMINV4':
-            print("This macro can be run only from admin project")
-            time.sleep(10)
-            return None
-
-        db_class = config["db_class"]
-        wait_TF = config["wait_TF"]
-
-        rds_client = boto3.client('rds',
-            'ap-northeast-2',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key)
-        
-        response = rds_client.modify_db_instance(
-            DBInstanceIdentifier='postgres-mag',
+        rds_client = boto_client('rds', self.aws_preset(), self.settings.aws_region)
+        rds_client.modify_db_instance(
+            DBInstanceIdentifier=db_instance_id,
             DBInstanceClass=db_class,
             ApplyImmediately=True
         )
-        
-        return_message = f"Started modifying DB class to <b>{db_class}</b>. You'll have wait until the database is up and running."
-        
+
+        return_message = "Started modifying DB class to <b>{}</b>. You'll have wait until the database is up and running.".format(db_class)
+
         if wait_TF:
             time.sleep(10)
-
             waiter = rds_client.get_waiter('db_instance_available')
-            waiter.wait(DBInstanceIdentifier='postgres-mag')
-
-            return_message = f"Finished modifying DB class to <b>{db_class}</b>"
+            waiter.wait(DBInstanceIdentifier=db_instance_id)
+            return_message = "Finished modifying DB class to <b>{}</b>".format(db_class)
 
         progress_callback(1)
 
-        return f"<p style='font-size:14px;'>{return_message}</p>"
+        return "<p style='font-size:14px;'>{}</p>".format(return_message)

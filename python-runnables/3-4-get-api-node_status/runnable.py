@@ -1,39 +1,18 @@
-# This file is the actual code for the Python runnable manage-starter-project
-from dataiku.runnables import Runnable
-import dataiku
-from managehandsonenv.common_functions import *
-import time
-import boto3
+# Report whether the EC2 instance hosting the API node is running or stopped.
+from managehandsonenv.aws import boto_client, ec2_instance_details
+from managehandsonenv.base import HandsOnRunnable
 
-class MyRunnable(Runnable):
-    def __init__(self, project_key, config, plugin_config):
-        self.project_key = project_key
-        self.config = config
-        self.plugin_config = plugin_config
-        
-    def get_progress_target(self):
-        return None
 
-    def run(self, progress_callback):
-        preset = self.config.get("aws_account", {})
-        aws_access_key_id = preset.get("aws_access_key_id")
-        aws_secret_access_key = preset.get("aws_secret_access_key")
-        # use as before, e.g. building a boto3 client
-        config = self.config
-        client = dataiku.api_client()
-    
-        if self.project_key != 'ADMINV4':
-            print("This macro can be run only from admin project")
-            time.sleep(10)
-            return None
+class MyRunnable(HandsOnRunnable):
+    def execute(self, progress_callback):
+        instance_id = self.settings.api_node_instance_id
 
-        ec2_client = boto3.client('ec2',
-            'ap-northeast-2',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key)
+        ec2_client = boto_client('ec2', self.aws_preset(), self.settings.aws_region)
+        instance_name, instance_state = ec2_instance_details(ec2_client, instance_id)
 
-        instance_id = 'i-0e7ccb12c93ac1df2'
+        if instance_state is None:
+            return "<p style='font-size:16px;'>Instance {} could not be described (see the macro log)</p>".format(instance_id)
 
-        instance_name, instance_state = get_aws_ec2_instance_details(ec2_client, instance_id)
-
-        return f"<p style='font-size:16px;'>Instance {instance_name} ({instance_id}) is <b>{instance_state.upper()}</b></p>"
+        return "<p style='font-size:16px;'>Instance {} ({}) is <b>{}</b></p>".format(
+            instance_name, instance_id, instance_state.upper()
+        )

@@ -1,49 +1,44 @@
-# This file is the actual code for the Python runnable manage-starter-project
-from dataiku.runnables import Runnable
-import dataiku
-#from managehandsonenv.common_functions import *
-import time
+# Stop sharing the shared dataset of the read-only project with every project not in the keep list.
+from managehandsonenv.base import HandsOnRunnable
 
-class MyRunnable(Runnable):
-    def __init__(self, project_key, config, plugin_config):
-        self.project_key = project_key
-        self.config = config
-        self.plugin_config = plugin_config
-        
+DEFAULT_TARGETS_TO_KEEP = ["KO4EVAL", "DEMO_KO_CARDFRAUD"]
+
+
+class MyRunnable(HandsOnRunnable):
     def get_progress_target(self):
         return (1, 'NONE')
 
-    def run(self, progress_callback):
-        config = self.config
-        client = dataiku.api_client()
+    def execute(self, progress_callback):
+        readonly_key = self.settings.readonly_project_key
+        dataset_name = self.settings.shared_dataset_name
+        keep_prefixes = self.config.get("target_projects_to_keep")
+        if keep_prefixes is None:  # parameter absent (older saved config): historical behaviour
+            keep_prefixes = DEFAULT_TARGETS_TO_KEEP
+        keep_prefixes = [p for p in keep_prefixes if p]
 
-        if self.project_key != 'ADMINV4':
-            print("This macro can be run only from admin project")
-            time.sleep(10)
-            return None
-
-        project = client.get_project("READONLY")
-
+        project = self.client.get_project(readonly_key)
         settings = project.get_settings()
         objects = settings.get_raw()['exposedObjects']['objects']
-        rules = next((obj for obj in objects if obj['localName'] == 'credit_score'), None)['rules']
+        exposed = next((obj for obj in objects if obj['localName'] == dataset_name), None)
+        if exposed is None:
+            raise RuntimeError("Dataset {} is not exposed by project {}".format(dataset_name, readonly_key))
+        rules = exposed['rules']
 
         index_list = []
-
-        for x in range(0,len(rules)):
-            if rules[x]['targetProject'].startswith('KO4EVAL') or rules[x]['targetProject'] == 'DEMO_KO_CARDFRAUD':
-                pass
+        for index, rule in enumerate(rules):
+            target = rule['targetProject']
+            if any(target.startswith(prefix) for prefix in keep_prefixes):
+                print("Keep sharing with {}".format(target))
             else:
-                print(f"Target project : {rules[x]['targetProject']}")
-                index_list.append(x)
+                print("Target project : {}".format(target))
+                index_list.append(index)
 
         for index in sorted(index_list, reverse=True):
             del rules[index]
 
         settings.save()
 
-        print(f"Stopped sharing {len(index_list)} shared project(s)")
-
+        print("Stopped sharing {} shared project(s)".format(len(index_list)))
         progress_callback(1)
 
-        return f"Stopped sharing {len(index_list)} shared project(s)"
+        return "Stopped sharing {} shared project(s)".format(len(index_list))

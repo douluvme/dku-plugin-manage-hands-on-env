@@ -1,61 +1,56 @@
-# This file is the actual code for the Python runnable manage-starter-project
-from dataiku.runnables import Runnable
-import dataiku
-from managehandsonenv.common_functions import *
-import time
+# Duplicate the selected starter projects once per workshop user (instructor user99 first).
 import traceback
+from collections import OrderedDict
+
+from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv.projects import duplicate_project, existing_project_keys, suffixed_key
+from managehandsonenv.results import grouped_lines, html_key, render_result
+from managehandsonenv.starters import starter_choices
+from managehandsonenv.users import get_user_folder, iter_user_nums, user_id
 
 
-class MyRunnable(Runnable):
-    """The base interface for a Python runnable"""
+def do(payload, config, plugin_config, inputs):
+    """Dynamic choices for the ``project_keys_list`` parameter (getChoicesFromPython)."""
+    return starter_choices(payload, config, plugin_config, inputs)
 
+
+class MyRunnable(HandsOnRunnable):
     def __init__(self, project_key, config, plugin_config):
-        self.project_key = project_key
-        self.config = config
-        self.plugin_config = plugin_config
-        self.client = dataiku.api_client()
-        self.number_of_users = int(config["user_count"]) + 1
+        super().__init__(project_key, config, plugin_config)
+        self.user_count = int(self.config["user_count"])
         self.dup_project_keys = self._get_project_keys()
-        self.total_progress_target = len(self.dup_project_keys) * self.number_of_users
-        print(f"Progress target = {self.total_progress_target}")
+        self.total_progress_target = len(self.dup_project_keys) * (self.user_count + 1)
+        print("Progress target = {}".format(self.total_progress_target))
 
     def _get_project_keys(self):
-        config = self.config
-        if config["key_select_method"] == "from_list":
-            return config["project_keys_list"]
-        return config["project_keys_input"]
+        if self.config["key_select_method"] == "from_list":
+            return list(self.config["project_keys_list"])
+        return list(self.config["project_keys_input"])
 
     def get_progress_target(self):
         return (self.total_progress_target, 'NONE')
 
-    def run(self, progress_callback):
-        config = self.config
+    def execute(self, progress_callback):
         client = self.client
-        build_TF = config["build_TF"]
-        overwrite_TF = config.get("overwrite_TF", False)
+        print("Number of users = {}".format(self.user_count + 1))
 
-        if self.project_key != 'ADMINV4':
-            raise Exception("This macro can be run only from the ADMINV4 admin project")
-
-        print(f"Number of users = {self.number_of_users}")
-
-        total_dup_count = 0
+        existing = existing_project_keys(client)
+        created = OrderedDict()
         skipped = []
         failures = []
-        result_string = ""
+        total_dup_count = 0
         progress = 1
 
-        for x in range(self.number_of_users):
-            user_num = '99' if x == 0 else str(x).zfill(2)
-            user_id = 'user' + user_num
-            result_string = f"{result_string}<br/><b>{user_id}</b> :"
+        for user_num in iter_user_nums(self.user_count):
+            user = user_id(user_num)
+            created[user] = []
 
             try:
-                user_folder = get_user_folder_by_id(client, user_id, create_if_not_exist_TF=True)
+                user_folder = get_user_folder(client, user, create=True, sandbox_folder=self.settings.sandbox_folder)
             except Exception as e:
-                print(f"Failed to get/create folder for {user_id}: {e}")
+                print("Failed to get/create folder for {}: {}".format(user, e))
                 traceback.print_exc()
-                failures.append((user_id, f"folder: {e}"))
+                failures.append((user, "folder: {}".format(e)))
                 progress += len(self.dup_project_keys)
                 progress_callback(min(progress, self.total_progress_target))
                 continue
@@ -64,39 +59,27 @@ class MyRunnable(Runnable):
                 progress_callback(progress)
                 progress += 1
 
-                target_key = f"{project}_{user_num}"
-
-                if project_exists(client, target_key):
-                    print(f"Skip {target_key} (already exists)")
+                target_key = suffixed_key(project, user_num)
+                if target_key in existing:
+                    print("Skip {} (already exists)".format(target_key))
                     skipped.append(target_key)
                     continue
 
                 try:
-                    result = duplicate_project_by_num(
-                        client, project, user_num, user_folder, build_TF
-                    )
+                    duplicate_project(client, project, target_key, user_folder)
                 except Exception as e:
-                    print(f"{target_key} duplication failed: {e}")
+                    print("{} duplication failed: {}".format(target_key, e))
                     traceback.print_exc()
                     failures.append((target_key, str(e)))
                     continue
 
-                if not result:
-                    print(f"{target_key} duplication returned empty result")
-                    failures.append((target_key, "empty result"))
-                    continue
-
+                existing.add(target_key)
                 total_dup_count += 1
-                result_string = f"{result_string} &lt;{target_key}&gt;"
+                created[user].append(html_key(target_key))
 
-        return_msg = f"<h4>Successfully duplicated {total_dup_count} project(s)</h4>{result_string}"
-
-        if skipped:
-            rows = "".join(f"<li>&lt;{k}&gt;</li>" for k in skipped)
-            return_msg += f"<h4>{len(skipped)} skipped (already exist)</h4><ul>{rows}</ul>"
-
-        if failures:
-            rows = "".join(f"<li>&lt;{k}&gt; — {reason}</li>" for k, reason in failures)
-            return_msg += f"<h4>{len(failures)} failure(s)</h4><ul>{rows}</ul>"
-
-        return return_msg
+        return render_result(
+            "Successfully duplicated {} project(s)".format(total_dup_count),
+            grouped_lines(created),
+            skipped=skipped,
+            failures=failures,
+        )
