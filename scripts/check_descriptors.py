@@ -6,7 +6,10 @@ DSS accepts ``//``, ``/* */`` and ``#`` comments in descriptors, which plain
 descriptor with a duplicate-key check (a last-wins parser silently dropped
 params in the past) and asserts that the three macros that pick starter
 projects get their choices from ``managehandsonenv.starters`` instead of a
-copy-pasted ``selectChoices`` list.
+copy-pasted ``selectChoices`` list: the param sets ``getChoicesFromPython``
+and the descriptor names a ``paramsPythonSetup`` script that exists under
+``resource/`` and defines ``do()`` (otherwise DSS refuses the component with
+"doesn't declare python setup code").
 
 Usage: ``python3 scripts/check_descriptors.py`` from anywhere; exits 1 on failure.
 """
@@ -78,6 +81,20 @@ def load_descriptor(path):
                       object_pairs_hook=reject_duplicates)
 
 
+def check_python_setup(descriptor, rel):
+    """A component using getChoicesFromPython must name a resource/ script that defines do()."""
+    setup = descriptor.get("paramsPythonSetup")
+    if not setup:
+        return [f"{rel}: uses getChoicesFromPython but declares no paramsPythonSetup "
+                f"(DSS: \"doesn't declare python setup code\")"]
+    script = ROOT / "resource" / setup
+    if not script.is_file():
+        return [f"{rel}: paramsPythonSetup {setup!r} not found at {script.relative_to(ROOT)}"]
+    if not any(line.startswith("def do(") for line in script.read_text(encoding="utf-8").splitlines()):
+        return [f"{script.relative_to(ROOT)}: must define `do(payload, config, plugin_config, inputs)`"]
+    return []
+
+
 def descriptor_paths():
     yield ROOT / "plugin.json"
     yield from sorted((ROOT / "parameter-sets").glob("*/parameter-set.json"))
@@ -109,6 +126,7 @@ def main():
             errors.append(f"{rel}: param {param_name!r} still has a hard-coded selectChoices list")
         elif param.get("getChoicesFromPython") is not True:
             errors.append(f"{rel}: param {param_name!r} must set \"getChoicesFromPython\": true")
+        errors.extend(check_python_setup(descriptor, rel))
 
     if errors:
         print("\n" + "\n".join(errors))

@@ -1,13 +1,7 @@
 # This file is the actual code for the Python runnable manage-starter-project
 from managehandsonenv.base import HandsOnRunnable
 from managehandsonenv.projects import set_project_owner, suffixed_key
-from managehandsonenv.starters import starter_choices
 from managehandsonenv.users import iter_user_nums_range, user_id
-
-
-def do(payload, config, plugin_config, inputs):
-    """Dynamic choices for the project_key_select param (getChoicesFromPython)."""
-    return starter_choices()
 
 
 class MyRunnable(HandsOnRunnable):

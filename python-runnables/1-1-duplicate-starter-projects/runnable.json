@@ -15,6 +15,8 @@
     /* whether the runnable's code is untrusted */
     "impersonate": false,
 
+    /* resource/starter_choices.py defines do(), which fills every getChoicesFromPython param below */
+    "paramsPythonSetup": "starter_choices.py",
 
     /* params:
     DSS will generate a formular from this list of requested parameters.
@@ -45,10 +47,8 @@
             "defaultValue": "from_list",
             "mandatory": true
         },
-        /* Choices come from managehandsonenv.starters.STARTERS via the module-level
-           do() in runnable.py. Verify on the target DSS version that python runnables
-           honour getChoicesFromPython; if the list shows up empty, fall back to a
-           static selectChoices array generated from starters.py. */
+        /* The choices come from managehandsonenv.starters.STARTERS via the do() function in
+           resource/starter_choices.py (see paramsPythonSetup above). */
         {
             "name": "project_keys_list",
             "label": "Project keys to duplicate",

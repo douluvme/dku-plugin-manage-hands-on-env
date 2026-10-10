@@ -2,9 +2,10 @@
 
 The macros 1-1 (duplicate), 1-2 (change owner) and 2-1 (delete) expose this
 list as the choices of their project-key parameter through DSS dynamic
-choices (``"getChoicesFromPython": true`` in their ``runnable.json`` plus a
-module-level ``do()`` in their ``runnable.py``). Add or rename a starter
-project here and all three macros follow.
+choices: ``"paramsPythonSetup": "starter_choices.py"`` and
+``"getChoicesFromPython": true`` in their ``runnable.json``, with the ``do()``
+function in ``resource/starter_choices.py`` returning :func:`starter_choices`.
+Add or rename a starter project here and all three macros follow.
 """
 
 STARTERS = [
