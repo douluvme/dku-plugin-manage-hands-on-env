@@ -61,6 +61,28 @@ def test_menu_labels_are_short_and_unique():
     assert bare.menu_label_or_label == "Long Label" and bare.menu_category_or_category == "⚠️ Cat"
 
 
+def test_display_names_drop_the_dss_menu_prefixes():
+    dup = get_feature("duplicate_starters")
+    assert dup.label == "1.Duplicate Starter Projects"
+    assert dup.display_label == "Duplicate Starter Projects"
+    assert dup.display_category == "Manage Starter Projects"
+    assert get_feature("api_node_status").display_label == "Get API Node Status"
+    assert get_feature("db_status").display_category == "Manage Workshop Environment"
+    plain = Feature(id="x", label="Plain", category="Plain cat", macro_folder="m", run=lambda c, p, cb: "")
+    assert plain.display_label == "Plain" and plain.display_category == "Plain cat"
+
+
+def test_settings_used_name_real_settings():
+    from dataclasses import fields
+
+    known = {f.name for f in fields(Settings)}
+    for feature in FEATURES.values():
+        assert feature.settings_used, feature.id
+        assert set(feature.settings_used) <= known, feature.id
+    assert get_feature("db_status").settings_used == ("aws_region", "rds_instance_id")
+    assert "readonly_project_key" in get_feature("stop_sharing").settings_used
+
+
 def test_destructive_features_confirm_except_dry_runs():
     assert {f.id for f in FEATURES.values() if f.destructive} == {
         "delete_projects", "toggle_users", "clean_deployments", "stop_sharing", "modify_db_class", "api_node_power",

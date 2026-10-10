@@ -33,7 +33,9 @@ def test_context_lists_features_by_category():
     ids = [f["id"] for c in body["categories"] for f in c["features"]]
     assert ids == list(FEATURES)
     first = body["categories"][0]["features"][0]
-    assert first["menu_label"] == "Duplicate Starters" and first["label"] == "1.Duplicate Starter Projects"
+    assert first["menu_label"] == "Duplicate Starters"
+    assert first["label"] == "Duplicate Starter Projects" and first["macro_label"] == "1.Duplicate Starter Projects"
+    assert body["categories"][0]["display_name"] == "Manage Starter Projects"
     delete = next(f for c in body["categories"] for f in c["features"] if f["id"] == "delete_projects")
     assert delete["destructive"] and delete["confirm"]
 
@@ -42,7 +44,10 @@ def test_form_and_unknown_feature():
     http, _, _ = build_app()
     body = http.get("/api/features/duplicate_starters/form").get_json()
     assert body["feature_id"] == "duplicate_starters"
+    assert body["label"] == "Duplicate Starter Projects"
     assert [p["name"] for p in body["params"]] == ["user_count", "key_select_method", "project_keys_list", "project_keys_input"]
+    assert body["settings"] == [{"key": "admin_project_key", "label": "Admin project", "value": "ADMINV4"},
+                                {"key": "sandbox_folder", "label": "Sandbox folder", "value": "SANDBOX"}]
     assert http.get("/api/features/nope/form").status_code == 404
     assert len(http.get("/api/features").get_json()["features"]) == len(FEATURES)
 

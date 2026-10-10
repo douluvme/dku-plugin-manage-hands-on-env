@@ -53,6 +53,18 @@ def test_preset_params_are_hidden_and_starters_injected():
     assert not dup["destructive"]
 
 
+def test_form_schema_carries_settings_and_label_overrides():
+    from managehandsonenv.settings import Settings
+
+    schema = form_schema(get_feature("delete_projects"), settings=Settings(sandbox_folder="SBX"))
+    assert schema["label"] == "Delete Starter Projects" and schema["macro_label"] == "1.Delete Starter Projects"
+    assert schema["category"] == "Housekeeping"
+    assert next(p for p in schema["params"] if p["name"] == "delete_TF")["label"] == "Perform deletion"
+    assert schema["settings"] == [{"key": "admin_project_key", "label": "Admin project", "value": "ADMINV4"},
+                                  {"key": "sandbox_folder", "label": "Sandbox folder", "value": "SBX"}]
+    assert form_schema(get_feature("delete_projects"))["settings"] == []  # no settings given
+
+
 def test_param_schema_falls_back_to_string_for_unknown_types():
     schema = param_schema({"name": "ds", "type": "DATASET", "label": "Dataset"})
     assert schema["type"] == "STRING" and schema["unsupportedType"] == "DATASET"

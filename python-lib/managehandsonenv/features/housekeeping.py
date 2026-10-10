@@ -233,6 +233,7 @@ def stop_sharing(ctx: Context, params: Dict[str, Any], progress_callback) -> str
 FEATURES = [
     Feature(
         id="delete_projects",
+        settings_used=("admin_project_key", "sandbox_folder"),
         menu_label="Delete Starters",
         menu_category=MENU_CATEGORY,
         label="1.Delete Starter Projects",
@@ -246,6 +247,7 @@ FEATURES = [
     ),
     Feature(
         id="toggle_users",
+        settings_used=("admin_project_key",),
         menu_label="Enable/Disable Users",
         menu_category=MENU_CATEGORY,
         label="2.Enable/disable Attendee Users",
@@ -258,6 +260,7 @@ FEATURES = [
     ),
     Feature(
         id="clean_deployments",
+        settings_used=("admin_project_key", "protected_bundle_prefix"),
         menu_label="Clean Deployments",
         menu_category=MENU_CATEGORY,
         label="3.Clean Deployed APIs and Bundles",
@@ -271,6 +274,7 @@ FEATURES = [
     ),
     Feature(
         id="stop_sharing",
+        settings_used=("admin_project_key", "readonly_project_key", "shared_dataset_name"),
         menu_label="Stop Sharing",
         menu_category=MENU_CATEGORY,
         label="4.Stop Sharing Datasets",

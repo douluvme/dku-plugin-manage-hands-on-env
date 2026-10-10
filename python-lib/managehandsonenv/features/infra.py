@@ -97,6 +97,7 @@ def api_node_status(ctx: Context, params: Dict[str, Any], progress_callback) -> 
 FEATURES = [
     Feature(
         id="modify_db_class",
+        settings_used=("aws_region", "rds_instance_id"),
         menu_label="Modify DB Size",
         menu_category=MENU_CATEGORY,
         label="1.Modify RDS DB size",
@@ -110,6 +111,7 @@ FEATURES = [
     ),
     Feature(
         id="db_status",
+        settings_used=("aws_region", "rds_instance_id"),
         menu_label="DB Status",
         menu_category=MENU_CATEGORY,
         label="2.Get RDS DB class & status",
@@ -120,6 +122,7 @@ FEATURES = [
     ),
     Feature(
         id="api_node_power",
+        settings_used=("aws_region", "api_node_instance_id"),
         menu_label="Start/Stop API Node",
         menu_category=MENU_CATEGORY,
         label="3.Start/Stop API node",
@@ -132,6 +135,7 @@ FEATURES = [
     ),
     Feature(
         id="api_node_status",
+        settings_used=("aws_region", "api_node_instance_id"),
         menu_label="API Node Status",
         menu_category=MENU_CATEGORY,
         label="4.Get API Node Status",

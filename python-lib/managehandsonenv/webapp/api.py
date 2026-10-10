@@ -23,11 +23,13 @@ def context_payload(ctx: Context) -> Dict[str, Any]:
         "categories": [
             {
                 "name": category,
+                "display_name": features[0].display_category,
                 "menu_name": features[0].menu_category_or_category,
                 "features": [
                     {
                         "id": feature.id,
-                        "label": feature.label,
+                        "label": feature.display_label,
+                        "macro_label": feature.label,
                         "menu_label": feature.menu_label_or_label,
                         "description": feature.description,
                         "destructive": feature.destructive,
@@ -47,7 +49,7 @@ def register_routes(app, manager: JobManager, context_factory: Callable[[], Cont
 
     def schema_for(feature):
         descriptor = descriptor_loader(feature.macro_folder) if descriptor_loader else None
-        return form_schema(feature, descriptor)
+        return form_schema(feature, descriptor, settings=context_factory().settings)
 
     def error(status: int, message: str, **extra):
         payload = {"error": message}

@@ -1,6 +1,12 @@
 """The :class:`Feature` record shared by the registry, the macros and the webapp."""
+import re
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
+
+#: "1.Duplicate Starter Projects" -> "Duplicate Starter Projects" (macro labels are numbered for the DSS menu)
+_LABEL_NUMBER = re.compile(r"^\s*\d+\s*\.\s*")
+#: "⚠️ Hands-on 1: Manage Starter Projects" -> "Manage Starter Projects"
+_CATEGORY_PREFIX = re.compile(r"^\s*(?:⚠️?\s*)?Hands-on\s*\d+\s*:\s*")
 
 from managehandsonenv.context import Context
 
@@ -29,6 +35,7 @@ class Feature:
     description: str = ""
     menu_label: str = ""                  # short label for the webapp's left menu (defaults to label)
     menu_category: str = ""               # short section name for the webapp's left menu (defaults to category)
+    settings_used: Tuple[str, ...] = ()   # Settings fields the feature acts on; the webapp shows them next to the form
 
     @property
     def menu_label_or_label(self) -> str:
@@ -37,6 +44,16 @@ class Feature:
     @property
     def menu_category_or_category(self) -> str:
         return self.menu_category or self.category
+
+    @property
+    def display_label(self) -> str:
+        """The label without the DSS-menu ordering number ("1.Duplicate..." -> "Duplicate...")."""
+        return _LABEL_NUMBER.sub("", self.label, count=1).strip() or self.label
+
+    @property
+    def display_category(self) -> str:
+        """The category without the "⚠️ Hands-on N:" prefix the DSS macro menu uses."""
+        return _CATEGORY_PREFIX.sub("", self.category, count=1).strip() or self.menu_category_or_category
 
     def needs_confirmation(self, params: Dict[str, Any]) -> bool:
         """Destructive features confirm, except a delete that is only a dry run."""

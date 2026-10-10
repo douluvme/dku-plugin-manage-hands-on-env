@@ -9,10 +9,11 @@ The descriptors are read from the generated snapshot
 runs a plugin webapp backend from a copy of the plugin that holds python-lib/
 but not python-runnables/.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from managehandsonenv.features.descriptor_data import MACRO_DESCRIPTORS
 from managehandsonenv.features.types import Feature
+from managehandsonenv.settings import Settings
 from managehandsonenv.starters import STARTERS
 
 #: parameter types the front end knows how to render; anything else is shown as a text input
@@ -20,10 +21,32 @@ RENDERABLE_TYPES = {"INT", "DOUBLE", "STRING", "PASSWORD", "TEXTAREA", "BOOLEAN"
 HIDDEN_TYPES = {"PRESET"}
 COPIED_KEYS = ("name", "label", "description", "defaultValue", "mandatory", "visibilityCondition", "allowDuplicates")
 
+#: webapp-only wording for a few macro labels; the descriptors (and the DSS macro forms) keep theirs
+LABEL_OVERRIDES = {
+    ("2-1-delete-starter-projects", "delete_TF"): "Perform deletion",
+    ("1-2-change-owner-starter-projects", "admin_TF"): "Set owner back to admin",
+    ("3-1-modify-db-class", "wait_TF"): "Wait until the change completes",
+}
 
-def param_schema(param: Dict[str, Any]) -> Dict[str, Any]:
+#: how the plugin settings read on the form ("RDS instance · postgres-mag")
+SETTING_LABELS = {
+    "admin_project_key": "Admin project",
+    "sandbox_folder": "Sandbox folder",
+    "aws_region": "AWS region",
+    "rds_instance_id": "RDS instance",
+    "api_node_instance_id": "API node instance",
+    "readonly_project_key": "Read-only project",
+    "shared_dataset_name": "Shared dataset",
+    "protected_bundle_prefix": "Protected prefix",
+}
+
+
+def param_schema(param: Dict[str, Any], macro_folder: Optional[str] = None) -> Dict[str, Any]:
     """One parameter of the form, as the front end expects it."""
     schema = {key: param[key] for key in COPIED_KEYS if key in param}
+    override = LABEL_OVERRIDES.get((macro_folder, param.get("name")))
+    if override:
+        schema["label"] = override
     param_type = param.get("type", "STRING")
     schema["type"] = param_type if param_type in RENDERABLE_TYPES else "STRING"
     if param_type not in RENDERABLE_TYPES:
@@ -36,26 +59,41 @@ def param_schema(param: Dict[str, Any]) -> Dict[str, Any]:
     return schema
 
 
-def form_schema(feature: Feature, descriptor: Dict[str, Any] = None) -> Dict[str, Any]:
-    """``{"feature_id", "label", "description", "destructive", "confirm", "params": [...]}``."""
+def settings_chips(feature: Feature, settings: Optional[Settings]) -> List[Dict[str, str]]:
+    """The plugin settings the feature acts on, for display next to its form."""
+    if settings is None:
+        return []
+    values = settings.public_dict()
+    return [
+        {"key": key, "label": SETTING_LABELS.get(key, key), "value": str(values[key])}
+        for key in feature.settings_used if key in values
+    ]
+
+
+def form_schema(feature: Feature, descriptor: Dict[str, Any] = None,
+                settings: Optional[Settings] = None) -> Dict[str, Any]:
+    """``{"feature_id", "label", "description", "destructive", "confirm", "params": [...], "settings": [...]}``."""
     if descriptor is None:
         try:
             descriptor = MACRO_DESCRIPTORS[feature.macro_folder]
         except KeyError:
             raise KeyError("No descriptor snapshot for macro folder {!r}: run `make sync`".format(feature.macro_folder))
     params: List[Dict[str, Any]] = [
-        param_schema(param)
+        param_schema(param, feature.macro_folder)
         for param in descriptor.get("params", [])
         if param.get("type") not in HIDDEN_TYPES and param.get("name")
     ]
     return {
         "feature_id": feature.id,
-        "label": feature.label,
-        "category": feature.category,
+        "label": feature.display_label,
+        "macro_label": feature.label,
+        "menu_label": feature.menu_label_or_label,
+        "category": feature.display_category,
         "description": feature.description or descriptor.get("meta", {}).get("description", ""),
         "destructive": feature.destructive,
         "confirm": feature.confirm,
         "params": params,
+        "settings": settings_chips(feature, settings),
     }
 
 

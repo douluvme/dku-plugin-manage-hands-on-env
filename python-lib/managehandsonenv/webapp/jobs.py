@@ -160,7 +160,7 @@ class JobManager:
             job = Job(
                 id=uuid.uuid4().hex[:8],
                 feature_id=feature.id,
-                label=feature.label,
+                label=feature.display_label,
                 params=dict(params),
                 destructive=feature.needs_confirmation(params),
             )

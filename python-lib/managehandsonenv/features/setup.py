@@ -132,6 +132,7 @@ def sandbox_to_admin(ctx: Context, params: Dict[str, Any], progress_callback) ->
 FEATURES = [
     Feature(
         id="duplicate_starters",
+        settings_used=("admin_project_key", "sandbox_folder"),
         menu_label="Duplicate Starters",
         menu_category=MENU_CATEGORY,
         label="1.Duplicate Starter Projects",
@@ -143,6 +144,7 @@ FEATURES = [
     ),
     Feature(
         id="change_owner",
+        settings_used=("admin_project_key",),
         menu_label="Change Owner",
         menu_category=MENU_CATEGORY,
         label="2.Change Projects Ownership",
@@ -153,6 +155,7 @@ FEATURES = [
     ),
     Feature(
         id="sandbox_to_admin",
+        settings_used=("admin_project_key", "sandbox_folder"),
         menu_label="Sandbox → Admin",
         menu_category=MENU_CATEGORY,
         label="3.Sandbox Projects → Admin",
