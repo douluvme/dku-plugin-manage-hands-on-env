@@ -1,20 +1,20 @@
 # This file is the actual code for the Python runnable manage-starter-project
-from dataiku.runnables import Runnable
-import dataiku
-from managehandsonenv.common_functions import *
-import time
 import traceback
 
+from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv.common_functions import (
+    duplicate_project_by_num,
+    get_user_folder_by_id,
+    project_exists,
+)
 
-class MyRunnable(Runnable):
-    """The base interface for a Python runnable"""
+
+class MyRunnable(HandsOnRunnable):
+    """Duplicate the selected starter projects once per user (instructor + attendees)."""
 
     def __init__(self, project_key, config, plugin_config):
-        self.project_key = project_key
-        self.config = config
-        self.plugin_config = plugin_config
-        self.client = dataiku.api_client()
-        self.number_of_users = int(config["user_count"]) + 1
+        super().__init__(project_key, config, plugin_config)
+        self.number_of_users = int(self.config["user_count"]) + 1
         self.dup_project_keys = self._get_project_keys()
         self.total_progress_target = len(self.dup_project_keys) * self.number_of_users
         print(f"Progress target = {self.total_progress_target}")
@@ -28,14 +28,10 @@ class MyRunnable(Runnable):
     def get_progress_target(self):
         return (self.total_progress_target, 'NONE')
 
-    def run(self, progress_callback):
+    def execute(self, progress_callback):
         config = self.config
         client = self.client
         build_TF = config["build_TF"]
-        overwrite_TF = config.get("overwrite_TF", False)
-
-        if self.project_key != 'ADMINV4':
-            raise Exception("This macro can be run only from the ADMINV4 admin project")
 
         print(f"Number of users = {self.number_of_users}")
 

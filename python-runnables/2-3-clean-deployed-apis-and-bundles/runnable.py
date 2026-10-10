@@ -1,50 +1,41 @@
 # This file is the actual code for the Python runnable manage-starter-project
-from dataiku.runnables import Runnable
-import dataiku
-#from managehandsonenv.common_functions import *
-import time
+from managehandsonenv.base import HandsOnRunnable
 
-class MyRunnable(Runnable):
+
+class MyRunnable(HandsOnRunnable):
+    """Delete API deployments/services and project deployments/bundles from the deployers."""
+
     def __init__(self, project_key, config, plugin_config):
-        self.project_key = project_key
-        self.config = config
-        self.plugin_config = plugin_config
+        super().__init__(project_key, config, plugin_config)
+        self.apideployer = self.client.get_apideployer()
+        self.projectdeployer = self.client.get_projectdeployer()
 
-        client = dataiku.api_client()
-        apideployer = client.get_apideployer()
-        projectdeployer = client.get_projectdeployer()
-        self.client = client
-        self.apideployer = apideployer
-        self.projectdeployer = client.get_projectdeployer()
-
-        api_or_bundle = config["api_or_bundle"]
-
+        api_or_bundle = self.config["api_or_bundle"]
         total_progress_count = 0
 
         if api_or_bundle in ['api', 'both']:
             try:
-                api_deployments = apideployer.list_deployments() or []
-                api_services = apideployer.list_services() or []
+                api_deployments = self.apideployer.list_deployments() or []
+                api_services = self.apideployer.list_services() or []
                 total_progress_count += len(api_deployments) + len(api_services)
             except Exception as e:
                 print(f"Error getting API deployments/services: {str(e)}")
 
         if api_or_bundle in ['bundle', 'both']:
             try:
-                project_deployments = projectdeployer.list_deployments() or []
-                project_bundles = projectdeployer.list_projects() or []
+                project_deployments = self.projectdeployer.list_deployments() or []
+                project_bundles = self.projectdeployer.list_projects() or []
                 total_progress_count += len(project_deployments) + len(project_bundles)
             except Exception as e:
                 print(f"Error getting project deployments/bundles: {str(e)}")
-            
+
         self.progress_target = total_progress_count
 
     def get_progress_target(self):
         return (self.progress_target, 'NONE')
 
-    def run(self, progress_callback):
+    def execute(self, progress_callback):
         config = self.config
-        client = self.client
         apideployer = self.apideployer
         projectdeployer = self.projectdeployer
         api_or_bundle = config["api_or_bundle"]
@@ -54,17 +45,12 @@ class MyRunnable(Runnable):
         prj_deployment_count = 0
         prj_bundle_count = 0
         progress = 1
-        
-        if self.project_key != 'ADMINV4':
-            print("This macro can be run only from admin project")
-            time.sleep(10)
-            return None
 
         if api_or_bundle in ['api', 'both']:
             deployments = apideployer.list_deployments()
             print("No of deployments = ", len(deployments))
             api_deployment_count = len(deployments)
-            result_string = f"</br>&lt;List of API deployment&gt;"
+            result_string = "</br>&lt;List of API deployment&gt;"
 
             for deployment in deployments:
                 print("### Deployment ID = ", deployment.id)
@@ -85,7 +71,6 @@ class MyRunnable(Runnable):
             result_string = f"{result_string}</br></br>&lt;List of API service&gt;"
 
             for service in services:
-                settings = service.get_settings()
                 print("### Service ID = ", service.id)
                 service.delete()
                 result_string = f"{result_string}</br>- {service.id}"
@@ -100,7 +85,6 @@ class MyRunnable(Runnable):
 
             for deployment in project_deployments:
                 if deployment.id.startswith('READONLY'):
-                    pass
                     print("Skip", deployment.id)
                 else:
                     print("### Project Deployment ID = ", deployment.id)
@@ -117,7 +101,6 @@ class MyRunnable(Runnable):
 
             for bundle in bundles:
                 if bundle.id.startswith('READONLY'):
-                    pass
                     print("Skip", bundle.id)
                 else:
                     print("### Project Bundle ID = ", bundle.id)
@@ -126,7 +109,7 @@ class MyRunnable(Runnable):
 
                 progress_callback(progress)
                 progress += 1
-        
-        return f"Successfully deleted {api_deployment_count} API deployment(s) and {api_service_count} service(s)</br> \
-            {prj_deployment_count} project deployment(s) and {prj_bundle_count} bundle(s) \
-            {result_string}"
+
+        return (f"Successfully deleted {api_deployment_count} API deployment(s) and {api_service_count} service(s)</br> "
+                f"{prj_deployment_count} project deployment(s) and {prj_bundle_count} bundle(s) "
+                f"{result_string}")
