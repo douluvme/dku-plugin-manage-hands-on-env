@@ -1,6 +1,8 @@
 # This file is the actual code for the Python runnable 1-3-change-owner-root-projects-to-admin
 from managehandsonenv.base import HandsOnRunnable
-from managehandsonenv.common_functions import *
+from managehandsonenv.users import SANDBOX_FOLDER
+from managehandsonenv.projects import set_project_owner
+from managehandsonenv.results import html_key, render_failures
 
 
 class MyRunnable(HandsOnRunnable):
@@ -11,21 +13,20 @@ class MyRunnable(HandsOnRunnable):
 
     def execute(self, progress_callback):
         client = self.client
-        total_update_count = 0
-        result_string = ""
+        updated = []
+        failures = []
 
-        sandbox_folder = client.get_project_folder('SANDBOX')
-        project_list = sandbox_folder.list_project_keys()
+        sandbox_folder = client.get_project_folder(SANDBOX_FOLDER)
 
-        for project_id in project_list:
-            try:
-                print(f"Update {project_id}")
-                total_update_count += set_project_owner(client, project_id, 'admin')
-                result_string = f"{result_string}&lt;{project_id}&gt;</br>"
-            except Exception as e:
-                print(f"{project_id} update failed: {e}")
+        for project_id in sandbox_folder.list_project_keys():
+            print(f"Update {project_id}")
+            if set_project_owner(client, project_id, 'admin'):
+                updated.append(project_id)
+            else:
+                failures.append((project_id, "set owner failed, see log"))
 
         progress_callback(1)
 
-        return_msg = f"Successfully changed owner of {total_update_count} project(s) to admin</br></br>{result_string}"
-        return return_msg
+        result_string = "".join(f"{html_key(k)}</br>" for k in updated)
+        return (f"Successfully changed owner of {len(updated)} project(s) to admin</br></br>{result_string}"
+                + render_failures(failures))

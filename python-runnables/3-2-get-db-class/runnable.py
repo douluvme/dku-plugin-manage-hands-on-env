@@ -1,22 +1,15 @@
 # This file is the actual code for the Python runnable 3-2-get-db-class
 from managehandsonenv.base import HandsOnRunnable
-import boto3
+from managehandsonenv.aws import boto_client, RDS_INSTANCE_ID
 
 
 class MyRunnable(HandsOnRunnable):
     """Report the current instance class and status of the workshop RDS database."""
 
     def execute(self, progress_callback):
-        preset = self.config.get("aws_account", {})
-        aws_access_key_id = preset.get("aws_access_key_id")
-        aws_secret_access_key = preset.get("aws_secret_access_key")
+        rds_client = boto_client('rds', self.config.get("aws_account"))
 
-        rds_client = boto3.client('rds',
-            'ap-northeast-2',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key)
-
-        response = rds_client.describe_db_instances(DBInstanceIdentifier='postgres-mag')
+        response = rds_client.describe_db_instances(DBInstanceIdentifier=RDS_INSTANCE_ID)
         db_class = response['DBInstances'][0]['DBInstanceClass']
         db_status = response['DBInstances'][0]['DBInstanceStatus']
 

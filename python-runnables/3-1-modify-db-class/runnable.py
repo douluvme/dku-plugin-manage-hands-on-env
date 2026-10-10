@@ -1,7 +1,7 @@
 # This file is the actual code for the Python runnable 3-1-modify-db-class
 from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv.aws import boto_client, RDS_INSTANCE_ID
 import time
-import boto3
 
 
 class MyRunnable(HandsOnRunnable):
@@ -12,20 +12,13 @@ class MyRunnable(HandsOnRunnable):
 
     def execute(self, progress_callback):
         config = self.config
-        preset = config.get("aws_account", {})
-        aws_access_key_id = preset.get("aws_access_key_id")
-        aws_secret_access_key = preset.get("aws_secret_access_key")
-
         db_class = config["db_class"]
         wait_TF = config["wait_TF"]
 
-        rds_client = boto3.client('rds',
-            'ap-northeast-2',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key)
+        rds_client = boto_client('rds', config.get("aws_account"))
 
         rds_client.modify_db_instance(
-            DBInstanceIdentifier='postgres-mag',
+            DBInstanceIdentifier=RDS_INSTANCE_ID,
             DBInstanceClass=db_class,
             ApplyImmediately=True
         )
@@ -36,7 +29,7 @@ class MyRunnable(HandsOnRunnable):
             time.sleep(10)
 
             waiter = rds_client.get_waiter('db_instance_available')
-            waiter.wait(DBInstanceIdentifier='postgres-mag')
+            waiter.wait(DBInstanceIdentifier=RDS_INSTANCE_ID)
 
             return_message = f"Finished modifying DB class to <b>{db_class}</b>"
 

@@ -1,6 +1,7 @@
 # This file is the actual code for the Python runnable 1-2-change-owner-starter-projects
 from managehandsonenv.base import HandsOnRunnable
-from managehandsonenv.common_functions import *
+from managehandsonenv.users import iter_user_nums_range, user_id
+from managehandsonenv.projects import suffixed_key, set_project_owner
 
 
 class MyRunnable(HandsOnRunnable):
@@ -10,17 +11,18 @@ class MyRunnable(HandsOnRunnable):
     def execute(self, progress_callback):
         config = self.config
         client = self.client
-        user_num_from = int(config["user_num_from"])
-        user_num_to = int(config["user_num_to"])
         admin_TF = config["admin_TF"]
 
+        project_key = (config["project_key_select"]
+                       if config["key_select_method"] == "from_list"
+                       else config["project_key_input"])
+
         total_update_count = 0
-        project_key = config["project_key_select"] if config["key_select_method"] == "from_list" else config["project_key_input"]
 
-        # 99 for instructor
-        total_update_count += set_project_owner_by_num(client, project_key, '99', set_owner_to_admin_TF=admin_TF)
-
-        for x in range(user_num_from, user_num_to + 1):
-            total_update_count += set_project_owner_by_num(client, project_key, str(x).zfill(2), set_owner_to_admin_TF=admin_TF)
+        # the instructor (99) is always included
+        for user_num in iter_user_nums_range(config["user_num_from"], config["user_num_to"]):
+            owner = 'admin' if admin_TF else user_id(user_num)
+            if set_project_owner(client, suffixed_key(project_key, user_num), owner):
+                total_update_count += 1
 
         return f"Successfully changed ownership for {total_update_count} project(s)"

@@ -1,6 +1,8 @@
 # This file is the actual code for the Python runnable 1-1-duplicate-starter-projects
 from managehandsonenv.base import HandsOnRunnable
-from managehandsonenv.common_functions import *
+from managehandsonenv.users import iter_user_nums, user_id, get_user_folder
+from managehandsonenv.projects import suffixed_key, project_exists, duplicate_project
+from managehandsonenv.results import html_key, user_heading, render_result
 import traceback
 
 
@@ -26,7 +28,6 @@ class MyRunnable(HandsOnRunnable):
     def execute(self, progress_callback):
         config = self.config
         client = self.client
-        build_TF = config["build_TF"]
 
         print(f"Number of users = {self.number_of_users}")
 
@@ -36,17 +37,16 @@ class MyRunnable(HandsOnRunnable):
         result_string = ""
         progress = 1
 
-        for x in range(self.number_of_users):
-            user_num = '99' if x == 0 else str(x).zfill(2)
-            user_id = 'user' + user_num
-            result_string = f"{result_string}<br/><b>{user_id}</b> :"
+        for user_num in iter_user_nums(config["user_count"]):
+            user = user_id(user_num)
+            result_string += user_heading(user)
 
             try:
-                user_folder = get_user_folder_by_id(client, user_id, create_if_not_exist_TF=True)
+                user_folder = get_user_folder(client, user, create=True)
             except Exception as e:
-                print(f"Failed to get/create folder for {user_id}: {e}")
+                print(f"Failed to get/create folder for {user}: {e}")
                 traceback.print_exc()
-                failures.append((user_id, f"folder: {e}"))
+                failures.append((user, f"folder: {e}"))
                 progress += len(self.dup_project_keys)
                 progress_callback(min(progress, self.total_progress_target))
                 continue
@@ -55,7 +55,7 @@ class MyRunnable(HandsOnRunnable):
                 progress_callback(progress)
                 progress += 1
 
-                target_key = f"{project}_{user_num}"
+                target_key = suffixed_key(project, user_num)
 
                 if project_exists(client, target_key):
                     print(f"Skip {target_key} (already exists)")
@@ -63,9 +63,7 @@ class MyRunnable(HandsOnRunnable):
                     continue
 
                 try:
-                    result = duplicate_project_by_num(
-                        client, project, user_num, user_folder, build_TF
-                    )
+                    result = duplicate_project(client, project, target_key, user_folder)
                 except Exception as e:
                     print(f"{target_key} duplication failed: {e}")
                     traceback.print_exc()
@@ -78,16 +76,11 @@ class MyRunnable(HandsOnRunnable):
                     continue
 
                 total_dup_count += 1
-                result_string = f"{result_string} &lt;{target_key}&gt;"
+                result_string += f" {html_key(target_key)}"
 
-        return_msg = f"<h4>Successfully duplicated {total_dup_count} project(s)</h4>{result_string}"
-
-        if skipped:
-            rows = "".join(f"<li>&lt;{k}&gt;</li>" for k in skipped)
-            return_msg += f"<h4>{len(skipped)} skipped (already exist)</h4><ul>{rows}</ul>"
-
-        if failures:
-            rows = "".join(f"<li>&lt;{k}&gt; — {reason}</li>" for k, reason in failures)
-            return_msg += f"<h4>{len(failures)} failure(s)</h4><ul>{rows}</ul>"
-
-        return return_msg
+        return render_result(
+            f"Successfully duplicated {total_dup_count} project(s)",
+            result_string,
+            skipped=skipped,
+            failures=failures,
+        )
