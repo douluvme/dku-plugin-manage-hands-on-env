@@ -304,3 +304,43 @@
   .hoc-field select, .hoc-field textarea { max-width: none; }
   .hoc-history li { flex-wrap: wrap; }
 }
+
+/* ---- settings chips, switch, run states ---------------------------------------- */
+.hoc-settings { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 12px; }
+.hoc-chip { display: inline-flex; align-items: center; border: 1px solid #d6dde6; border-radius: 12px; font-size: 12px; overflow: hidden; }
+.hoc-chip-key { background: #eef2f7; color: #555; padding: 2px 8px; }
+.hoc-chip-value { padding: 2px 8px; font-family: Menlo, Consolas, monospace; color: #222; }
+
+.hoc-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 13px; padding-top: 4px; }
+.hoc-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.hoc-switch-track { position: relative; width: 36px; height: 20px; border-radius: 10px; background: #c9d2dc; transition: background 0.15s; flex: 0 0 auto; }
+.hoc-switch-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left 0.15s; }
+.hoc-switch input:checked + .hoc-switch-track { background: #c62828; }
+.hoc-switch input:checked + .hoc-switch-track::after { left: 18px; }
+.hoc-switch input:focus-visible + .hoc-switch-track { outline: 2px solid #2c5aa0; outline-offset: 2px; }
+.hoc-switch input:checked ~ .hoc-switch-text { color: #c62828; }
+
+.hoc-run-btn.danger { background: #c62828; border-color: #c62828; }
+.hoc-run-btn.danger:hover { background: #a52020; }
+.hoc-run-error { color: #b3261e; font-size: 13px; }
+
+.hoc-tool-btn { border: 1px solid #c9d2dc; background: #fff; color: #333; border-radius: 4px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+.hoc-tool-btn:hover { background: #eef3f8; }
+.hoc-tool-sm { padding: 1px 7px; font-size: 11px; margin-left: 8px; vertical-align: 1px; }
+.hoc-job-tools { display: flex; align-items: center; gap: 10px; }
+
+/* ---- confirmation dialog ----------------------------------------------------------- */
+.hoc-confirm { border: 0; border-radius: 8px; padding: 0; width: min(560px, calc(100vw - 32px)); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25); font-family: inherit; color: #222; }
+.hoc-confirm::backdrop { background: rgba(0, 0, 0, 0.4); }
+.hoc-confirm form { padding: 18px 20px 16px; }
+.hoc-confirm h2 { margin: 0 0 8px; font-size: 16px; }
+.hoc-confirm.danger h2 { color: #c62828; }
+.hoc-confirm p { margin: 0 0 12px; font-size: 13px; color: #444; }
+.hoc-confirm-params { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+.hoc-confirm-params th { text-align: left; font-weight: 600; padding: 4px 10px 4px 0; width: 42%; vertical-align: top; color: #555; }
+.hoc-confirm-params td { padding: 4px 0; vertical-align: top; word-break: break-word; }
+.hoc-confirm-params tr + tr th, .hoc-confirm-params tr + tr td { border-top: 1px solid #eee; }
+.hoc-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.hoc-confirm.danger .hoc-run-btn { background: #c62828; border-color: #c62828; }
+
+.hoc-history li.active { background: #e8edf3; }

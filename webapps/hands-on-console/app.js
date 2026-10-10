@@ -206,14 +206,15 @@
   }
 
   // ---- form -------------------------------------------------------------------
-  function selectFeature(featureId) {
+  function selectFeature(featureId, prefill) {
     markSelected(featureId);
     setDrawerOpen(false);
     showTab("run");
-    api("/api/features/" + encodeURIComponent(featureId) + "/form").then(function (schema) {
+    return api("/api/features/" + encodeURIComponent(featureId) + "/form").then(function (schema) {
       state.feature = featureId;
       state.schema = schema;
       renderForm(schema);
+      if (prefill) fillForm(schema, prefill);
     }).catch(function (err) { banner("Could not load the form: " + err.message, true); });
   }
 
@@ -222,17 +223,67 @@
     $("hoc-feature").hidden = false;
     $("hoc-feature-label").textContent = schema.label;
     $("hoc-feature-description").textContent = schema.description || "";
+    var chips = $("hoc-settings");
+    chips.innerHTML = "";
+    (schema.settings || []).forEach(function (setting) {
+      chips.appendChild(el("span", { class: "hoc-chip" }, [
+        el("span", { class: "hoc-chip-key", text: setting.label }),
+        el("span", { class: "hoc-chip-value", text: setting.value })
+      ]));
+    });
+    chips.hidden = !(schema.settings && schema.settings.length);
     var form = $("hoc-form");
     form.innerHTML = "";
     schema.params.forEach(function (param) { form.appendChild(renderField(param)); });
+    $("hoc-run-error").hidden = true;
     applyVisibility();
     updateRunButton();
+  }
+
+  // Put a job's parameters back into the form (every input type the form renders).
+  function fillForm(schema, params) {
+    (schema.params || []).forEach(function (param) {
+      if (!(param.name in params)) return;
+      var field = document.querySelector('.hoc-field[data-name="' + param.name + '"]');
+      if (!field) return;
+      var value = params[param.name];
+      switch (param.type) {
+        case "BOOLEAN":
+          field.querySelector("input").checked = !!value;
+          break;
+        case "MULTISELECT":
+          Array.prototype.forEach.call(field.querySelectorAll("input"), function (input) {
+            input.checked = Array.isArray(value) && value.indexOf(input.value) >= 0;
+          });
+          break;
+        case "STRINGS":
+          field.querySelector("textarea").value = Array.isArray(value) ? value.join("\n") : (value || "");
+          break;
+        default:
+          var input = field.querySelector("input, select, textarea");
+          if (input) input.value = value === null || value === undefined ? "" : value;
+      }
+    });
+    applyVisibility();
+    updateRunButton();
+  }
+
+  function dryRunParam() {
+    return state.schema && state.schema.params.filter(function (p) { return p.name === "delete_TF" && p.type === "BOOLEAN"; })[0];
+  }
+
+  function isRealRun() {
+    var param = dryRunParam();
+    if (!param) return state.schema ? state.schema.destructive : false;
+    var model = readForm();
+    return evalCondition(param.visibilityCondition, model) && !!model.delete_TF;
   }
 
   function onFormEdit(event) {
     applyVisibility();
     var field = event.target && event.target.closest ? event.target.closest(".hoc-field") : null;
     if (field && field.classList.contains("invalid")) setFieldError(field.getAttribute("data-name"), "");
+    updateRunButton();
   }
 
   function renderField(param) {
@@ -246,7 +297,16 @@
                                 value: dflt !== undefined ? dflt : "" })];
         break;
       case "BOOLEAN":
-        inputs = [el("input", { type: "checkbox", name: name, checked: dflt ? "checked" : null })];
+        if (name === "delete_TF") {
+          // the dry-run / real-run decision gets a switch so it cannot be overlooked
+          inputs = [el("label", { class: "hoc-switch" }, [
+            el("input", { type: "checkbox", name: name, checked: dflt ? "checked" : null, role: "switch" }),
+            el("span", { class: "hoc-switch-track", "aria-hidden": "true" }),
+            el("span", { class: "hoc-switch-text", "data-switch-text": name })
+          ])];
+        } else {
+          inputs = [el("input", { type: "checkbox", name: name, checked: dflt ? "checked" : null })];
+        }
         break;
       case "SELECT":
         inputs = [el("select", { name: name }, (param.choices || []).map(function (choice) {
@@ -377,9 +437,74 @@
   function updateRunButton() {
     var running = state.job && state.job.active;
     var allowed = state.context && state.context.allowed;
-    $("hoc-run").disabled = !allowed || !!running || !state.feature;
+    var button = $("hoc-run");
+    button.disabled = !allowed || !!running || !state.feature;
     $("hoc-run-hint").textContent = !allowed ? "Disabled outside the admin project"
       : running ? "A job is running; wait for it to finish" : "";
+    var real = isRealRun();
+    var hasSwitch = !!dryRunParam();
+    button.textContent = hasSwitch ? (real ? "Delete for real" : "Run dry run") : "Run";
+    button.classList.toggle("danger", hasSwitch && real);
+    var switchText = document.querySelector('[data-switch-text="delete_TF"]');
+    if (switchText) switchText.textContent = real ? "Delete for real" : "Dry run (list only)";
+    $("hoc-rerun").hidden = !(state.job && !state.job.active);
+  }
+
+  // ---- confirmation ---------------------------------------------------------------
+  function describeValue(param, value) {
+    if (Array.isArray(value)) {
+      var labels = (param.choices || []);
+      return value.map(function (v) {
+        var choice = labels.filter(function (c) { return String(c.value) === String(v); })[0];
+        return choice ? (choice.label || v) : v;
+      }).join(", ") || "(none)";
+    }
+    if (typeof value === "boolean") return value ? "yes" : "no";
+    if (param.choices) {
+      var match = param.choices.filter(function (c) { return String(c.value) === String(value); })[0];
+      if (match) return match.label || String(value);
+    }
+    return value === null || value === undefined || value === "" ? "(empty)" : String(value);
+  }
+
+  // Resolves to true when the user confirms. Uses the in-page dialog, or window.confirm without <dialog>.
+  function confirmRun(schema, params, real) {
+    var dialog = $("hoc-confirm");
+    var text = schema.confirm || "This action changes the instance.";
+    if (typeof HTMLDialogElement !== "function" || !dialog.showModal) {
+      var summary = Object.keys(params).map(function (k) { return k + " = " + JSON.stringify(params[k]); }).join("\n");
+      return Promise.resolve(window.confirm(text + "\n\n" + schema.label + "\n" + summary + "\n\nRun it?"));
+    }
+    $("hoc-confirm-title").textContent = (real && dryRunParam() ? "Delete for real: " : "Confirm: ") + schema.label;
+    $("hoc-confirm-text").textContent = text;
+    var table = $("hoc-confirm-params");
+    table.innerHTML = "";
+    schema.params.forEach(function (param) {
+      if (!(param.name in params)) return;
+      table.appendChild(el("tr", {}, [
+        el("th", { text: param.label || param.name }),
+        el("td", { text: describeValue(param, params[param.name]) })
+      ]));
+    });
+    dialog.classList.toggle("danger", !!real);
+    $("hoc-confirm-ok").textContent = real && dryRunParam() ? "Delete for real" : "Run";
+    return new Promise(function (resolve) {
+      function done(ok) {
+        $("hoc-confirm-ok").removeEventListener("click", onOk);
+        $("hoc-confirm-cancel").removeEventListener("click", onCancel);
+        dialog.removeEventListener("close", onClose);
+        if (dialog.open) dialog.close();
+        resolve(ok);
+      }
+      function onOk() { done(true); }
+      function onCancel() { done(false); }
+      function onClose() { done(false); }
+      $("hoc-confirm-ok").addEventListener("click", onOk);
+      $("hoc-confirm-cancel").addEventListener("click", onCancel);
+      dialog.addEventListener("close", onClose);
+      dialog.showModal();
+      $("hoc-confirm-cancel").focus();
+    });
   }
 
   // ---- running ----------------------------------------------------------------
@@ -387,31 +512,36 @@
     if (!state.schema || $("hoc-run").disabled) return;
     if (validateForm()) return;
     var params = visibleParams();
+    var real = isRealRun();
     var needsConfirm = state.schema.destructive && ("delete_TF" in params ? !!params.delete_TF : true);
-    if (needsConfirm) {
-      var summary = Object.keys(params).map(function (k) { return k + " = " + JSON.stringify(params[k]); }).join("\n");
-      if (!window.confirm((state.schema.confirm || "This action changes the instance.") +
-                          "\n\n" + state.schema.label + "\n" + summary + "\n\nRun it?")) return;
-    }
-    banner("");
-    $("hoc-run").disabled = true;
-    post("/api/jobs", { feature_id: state.feature, params: params }).then(function (body) {
-      showJob(body.job, true);
-      refreshHistory();
-    }).catch(function (err) {
-      if (err.status === 409 && err.body && err.body.job) {
-        banner("Another job is still running: " + err.body.job.label, true);
-        showJob(err.body.job, true);
-      } else {
-        banner("Could not start: " + err.message, true);
-      }
-      updateRunButton();
+    var proceed = needsConfirm ? confirmRun(state.schema, params, real) : Promise.resolve(true);
+    proceed.then(function (ok) {
+      if (!ok) return;
+      banner("");
+      $("hoc-run-error").hidden = true;
+      $("hoc-run").disabled = true;
+      return post("/api/jobs", { feature_id: state.feature, params: params }).then(function (body) {
+        showJob(body.job, true);
+        refreshHistory();
+      }).catch(function (err) {
+        if (err.status === 409 && err.body && err.body.job) {
+          banner("Another job is still running: " + err.body.job.label, true);
+          showJob(err.body.job, true);
+        } else {
+          var error = $("hoc-run-error");
+          error.textContent = "Could not start: " + err.message;
+          error.hidden = false;
+        }
+        updateRunButton();
+      });
     });
   }
 
   function showJob(job, follow) {
+    var isNew = !state.job || state.job.id !== job.id;
     state.job = job;
     state.logLength = 0;
+    state.lastStatus = null;
     $("hoc-log").textContent = "";
     $("hoc-job").hidden = false;
     showTab("run");
@@ -419,6 +549,44 @@
     if (follow && job.active) startPolling(job.id);
     else stopPolling();
     updateRunButton();
+    if (isNew) $("hoc-job").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // Reopen a job: select its feature, prefill the form with its parameters, then show the job.
+  function openJob(jobSummary) {
+    api("/api/jobs/" + jobSummary.id).then(function (full) {
+      var job = full.job;
+      return selectFeature(job.feature_id, job.params).then(function () { showJob(job, job.active); });
+    }).catch(function (err) { banner("Could not open the job: " + err.message, true); });
+  }
+
+  function rerunCurrent() {
+    if (!state.job) return;
+    var job = state.job;
+    selectFeature(job.feature_id, job.params).then(function () {
+      $("hoc-feature").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function copyLog() {
+    var text = $("hoc-log").textContent;
+    var done = function () {
+      var button = $("hoc-copy-log");
+      button.textContent = "Copied";
+      setTimeout(function () { button.textContent = "Copy"; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  }
+
+  function fallbackCopy(text) {
+    var area = document.createElement("textarea");
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand("copy"); } catch (e) { /* nothing more to try */ }
+    document.body.removeChild(area);
   }
 
   function renderJob(job) {
@@ -452,6 +620,12 @@
       pre.scrollTop = pre.scrollHeight;
     }
     if (job.log_length !== undefined) state.logLength = job.log_length;
+    $("hoc-log-count").textContent = state.logLength ? String(state.logLength) : "";
+    if (job.status !== state.lastStatus) {
+      // open while running and on failure, folded away once a job succeeded
+      $("hoc-log-details").open = job.active || job.status === "failed";
+      state.lastStatus = job.status;
+    }
 
     var error = $("hoc-error");
     error.hidden = !job.error;
@@ -494,9 +668,9 @@
       }
       body.jobs.forEach(function (job) {
         list.appendChild(el("li", {
-          onclick: function () {
-            api("/api/jobs/" + job.id).then(function (full) { showJob(full.job, full.job.active); });
-          }
+          "data-job": job.id,
+          class: state.job && state.job.id === job.id ? "active" : "",
+          onclick: function () { openJob(job); }
         }, [
           el("span", { class: "hoc-when", text: formatTime(job.started_at || job.created_at) }),
           el("span", { class: "hoc-status " + job.status, text: job.status }),
@@ -527,6 +701,11 @@
       setDrawerOpen(!$("hoc-sidebar").classList.contains("open"));
     });
     $("hoc-backdrop").addEventListener("click", function () { setDrawerOpen(false); });
+    $("hoc-rerun").addEventListener("click", rerunCurrent);
+    $("hoc-copy-log").addEventListener("click", function (event) { event.preventDefault(); copyLog(); });
+    $("hoc-confirm").addEventListener("click", function (event) {   // click on the backdrop closes
+      if (event.target === $("hoc-confirm")) $("hoc-confirm").close();
+    });
     Array.prototype.forEach.call(document.querySelectorAll(".hoc-tab"), function (tab) {
       tab.addEventListener("click", function () { showTab(tab.getAttribute("data-tab")); });
     });

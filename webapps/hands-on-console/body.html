@@ -29,10 +29,12 @@
       <section id="hoc-feature" class="hoc-panel" hidden>
         <h2 id="hoc-feature-label"></h2>
         <p id="hoc-feature-description" class="hoc-muted"></p>
+        <div id="hoc-settings" class="hoc-settings" title="Plugin settings this feature acts on"></div>
         <form id="hoc-form" class="hoc-form" autocomplete="off"></form>
         <div class="hoc-actions">
           <button id="hoc-run" type="button" class="hoc-run-btn">Run</button>
           <span id="hoc-run-hint" class="hoc-muted"></span>
+          <span id="hoc-run-error" class="hoc-run-error" role="alert" hidden></span>
         </div>
       </section>
 
@@ -43,7 +45,10 @@
       <section id="hoc-job" class="hoc-panel" hidden>
         <div class="hoc-job-head">
           <h2>Job <span id="hoc-job-label"></span></h2>
-          <span id="hoc-job-status" class="hoc-status"></span>
+          <div class="hoc-job-tools">
+            <button id="hoc-rerun" type="button" class="hoc-tool-btn" title="Load this job's parameters into the form">Run again</button>
+            <span id="hoc-job-status" class="hoc-status"></span>
+          </div>
         </div>
         <div class="hoc-progress">
           <span id="hoc-progress-text" class="hoc-progress-text"></span>
@@ -52,14 +57,28 @@
             <span id="hoc-progress-text-light" class="hoc-progress-text light" aria-hidden="true"></span>
           </div>
         </div>
-        <details class="hoc-log" open>
-          <summary>Log</summary>
+        <details id="hoc-log-details" class="hoc-log" open>
+          <summary>Log <span id="hoc-log-count" class="hoc-count"></span>
+            <button id="hoc-copy-log" type="button" class="hoc-tool-btn hoc-tool-sm" title="Copy the log to the clipboard">Copy</button>
+          </summary>
           <pre id="hoc-log"></pre>
         </details>
         <div id="hoc-error" class="hoc-error" hidden></div>
         <div id="hoc-result" class="hoc-result"></div>
       </section>
     </section>
+
+    <dialog id="hoc-confirm" class="hoc-confirm">
+      <form method="dialog">
+        <h2 id="hoc-confirm-title"></h2>
+        <p id="hoc-confirm-text"></p>
+        <table id="hoc-confirm-params" class="hoc-confirm-params"></table>
+        <div class="hoc-confirm-actions">
+          <button type="button" id="hoc-confirm-cancel" class="hoc-tool-btn" value="cancel">Cancel</button>
+          <button type="button" id="hoc-confirm-ok" class="hoc-run-btn" value="ok">Run</button>
+        </div>
+      </form>
+    </dialog>
 
     <section id="hoc-pane-history" class="hoc-pane" data-pane="history" hidden>
       <section class="hoc-panel">
