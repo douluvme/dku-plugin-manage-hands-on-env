@@ -61,48 +61,15 @@
             "defaultValue": "from_list",
             "mandatory": true
         },
+        /* Choices come from managehandsonenv.starters.STARTERS via the module-level
+           do() in runnable.py. Verify on the target DSS version that python runnables
+           honour getChoicesFromPython; if the list shows up empty, fall back to a
+           static selectChoices array generated from starters.py. */
         {
             "name": "project_key_select",
             "label": "Project key to change owner",
             "type": "SELECT",
-            "selectChoices": [
-                {
-                    "value": "KO1COBUILD",
-                    "label": "Start 1 Cobuild"
-                },
-                {
-                    "value": "KO2EXPL",
-                    "label": "Start 2 Explore"
-                },
-                {
-                    "value": "KO3ML",
-                    "label": "Start 3 ML"
-                },
-                {
-                    "value": "KO4EVAL",
-                    "label": "Start 4 Evaluate"
-                },
-                {
-                    "value": "PROD_REVIEW",
-                    "label": "LLM - 상품 리뷰 분석"
-                },
-                {
-                    "value": "LLMPROMPTENGINEERING",
-                    "label": "LLM - Prompt Engineering"
-                },
-                {
-                    "value": "MULTIMODALRAG",
-                    "label": "LLM - Multimodal RAG"
-                },
-                {
-                    "value": "TUT_VISUAL_AGENTS",
-                    "label": "Visual Agents Tutorial"
-                },
-                {
-                    "value": "LOAN_ADVISOR_AGENT",
-                    "label": "대출 상담 어드바이저 에이전트"
-                }
-            ],
+            "getChoicesFromPython": true,
             "mandatory": true,
             "visibilityCondition": "model.key_select_method == 'from_list'"
         },

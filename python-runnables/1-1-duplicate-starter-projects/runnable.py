@@ -4,7 +4,13 @@ import traceback
 from managehandsonenv.base import HandsOnRunnable
 from managehandsonenv.projects import duplicate_project, project_exists, suffixed_key
 from managehandsonenv.results import key_tag, render_result
+from managehandsonenv.starters import starter_choices
 from managehandsonenv.users import get_user_folder, iter_user_nums, user_id
+
+
+def do(payload, config, plugin_config, inputs):
+    """Dynamic choices for the project_keys_list param (getChoicesFromPython)."""
+    return starter_choices()
 
 
 class MyRunnable(HandsOnRunnable):
