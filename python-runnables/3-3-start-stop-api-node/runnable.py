@@ -1,9 +1,9 @@
 # This file is the actual code for the Python runnable manage-starter-project
 from managehandsonenv.aws import boto_client, ec2_instance_details
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Start or stop the API node EC2 instance and wait for the target state."""
 
     def execute(self, progress_callback):

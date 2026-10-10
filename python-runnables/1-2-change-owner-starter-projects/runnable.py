@@ -1,10 +1,10 @@
 # This file is the actual code for the Python runnable manage-starter-project
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.projects import set_project_owner, suffixed_key
 from managehandsonenv.users import iter_user_nums_range, user_id
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Change the owner of one starter project for a range of users (instructor always included)."""
 
     def execute(self, progress_callback):

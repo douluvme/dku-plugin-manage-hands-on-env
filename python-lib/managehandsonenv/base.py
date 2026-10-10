@@ -39,10 +39,15 @@ class Settings:
 class HandsOnRunnable(Runnable):
     """Base class for the hands-on macros.
 
-    Every ``runnable.py`` keeps a ``class MyRunnable(HandsOnRunnable)`` because
-    DSS loads the runnable by that name. Subclasses implement :meth:`execute`
-    instead of :meth:`run`; :meth:`run` enforces that the macro is launched
-    from the admin project and then delegates to :meth:`execute`.
+    Every ``runnable.py`` does ``from managehandsonenv import base`` and keeps a
+    ``class MyRunnable(base.HandsOnRunnable)`` because DSS loads the runnable by
+    that name. Import the *module*, never ``from managehandsonenv.base import
+    HandsOnRunnable``: DSS scans the macro module for classes inheriting
+    ``Runnable`` and refuses to load it when it finds more than one.
+
+    Subclasses implement :meth:`execute` instead of :meth:`run`; :meth:`run`
+    enforces that the macro is launched from the admin project and then
+    delegates to :meth:`execute`.
 
     Subclasses that report progress override :meth:`get_progress_target`.
     """

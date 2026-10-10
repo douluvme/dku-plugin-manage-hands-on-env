@@ -1,11 +1,11 @@
 # This file is the actual code for the Python runnable manage-starter-project
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 #: Used when the target_projects_to_keep param is left empty.
 DEFAULT_TARGETS_TO_KEEP = ("KO4EVAL", "DEMO_KO_CARDFRAUD")
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Remove the sharing rules of the shared dataset, except for the target projects to keep.
 
     Each entry of ``target_projects_to_keep`` is a prefix: a rule is kept when its

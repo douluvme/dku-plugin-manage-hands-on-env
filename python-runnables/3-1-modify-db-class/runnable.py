@@ -2,10 +2,10 @@
 import time
 
 from managehandsonenv.aws import boto_client
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Change the RDS instance class, optionally waiting until the database is available again."""
 
     def get_progress_target(self):

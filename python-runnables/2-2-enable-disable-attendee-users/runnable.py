@@ -1,9 +1,9 @@
 # This file is the actual code for the Python runnable manage-starter-project
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.users import is_attendee_login
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Enable or disable every attendee login (userNN), leaving the instructor (user99) untouched."""
 
     def execute(self, progress_callback):

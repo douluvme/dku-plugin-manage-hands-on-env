@@ -1,13 +1,13 @@
 # This file is the actual code for the Python runnable manage-starter-project
 import traceback
 
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.projects import duplicate_project, project_exists, suffixed_key
 from managehandsonenv.results import key_tag, render_result
 from managehandsonenv.users import get_user_folder, iter_user_nums, user_id
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Duplicate the selected starter projects once per user (instructor + attendees)."""
 
     def __init__(self, project_key, config, plugin_config):

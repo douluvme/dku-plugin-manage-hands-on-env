@@ -1,10 +1,10 @@
 # This file is the actual code for the Python runnable manage-starter-project
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.projects import set_project_owner
 from managehandsonenv.results import key_tag
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Set the owner of every project directly under the sandbox folder to admin."""
 
     def get_progress_target(self):

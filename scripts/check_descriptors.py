@@ -95,6 +95,25 @@ def check_python_setup(descriptor, rel):
     return []
 
 
+def check_runnable_sources():
+    """Each macro must import the base *module* and define MyRunnable(base.HandsOnRunnable).
+
+    DSS scans runnable.py for classes inheriting Runnable and refuses the macro when it
+    finds more than one ("Multiple classes inheriting Runnable"), which is what
+    ``from managehandsonenv.base import HandsOnRunnable`` causes.
+    """
+    errors = []
+    for path in sorted((ROOT / "python-runnables").glob("*/runnable.py")):
+        rel = path.relative_to(ROOT)
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if "class MyRunnable(base.HandsOnRunnable):" not in lines:
+            errors.append(f"{rel}: must define `class MyRunnable(base.HandsOnRunnable):`")
+        if any(line.startswith("from managehandsonenv.base import") for line in lines):
+            errors.append(f"{rel}: must `from managehandsonenv import base`, not import names from it "
+                          f"(DSS: \"Multiple classes inheriting Runnable\")")
+    return errors
+
+
 def descriptor_paths():
     yield ROOT / "plugin.json"
     yield from sorted((ROOT / "parameter-sets").glob("*/parameter-set.json"))
@@ -128,10 +147,13 @@ def main():
             errors.append(f"{rel}: param {param_name!r} must set \"getChoicesFromPython\": true")
         errors.extend(check_python_setup(descriptor, rel))
 
+    errors.extend(check_runnable_sources())
+
     if errors:
         print("\n" + "\n".join(errors))
         return 1
-    print(f"\n{len(parsed)} descriptor(s) valid; starter params use getChoicesFromPython")
+    print(f"\n{len(parsed)} descriptor(s) valid; starter params use getChoicesFromPython; "
+          f"runnables import the base module")
     return 0
 
 

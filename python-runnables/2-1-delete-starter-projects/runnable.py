@@ -2,7 +2,7 @@
 import time
 import traceback
 
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.projects import delete_project, project_exists, suffixed_key
 from managehandsonenv.results import key_tag, render_result
 from managehandsonenv.users import (
@@ -14,7 +14,7 @@ from managehandsonenv.users import (
 )
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Delete hands-on projects: by user number, every user folder, or the whole sandbox folder."""
 
     def __init__(self, project_key, config, plugin_config):

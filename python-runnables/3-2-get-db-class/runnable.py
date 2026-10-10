@@ -1,9 +1,9 @@
 # This file is the actual code for the Python runnable manage-starter-project
 from managehandsonenv.aws import boto_client
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Report the current RDS instance class and status."""
 
     def execute(self, progress_callback):

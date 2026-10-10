@@ -1,8 +1,8 @@
 # This file is the actual code for the Python runnable manage-starter-project
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     """Delete API deployments/services and project deployments/bundles from the deployers."""
 
     def __init__(self, project_key, config, plugin_config):
