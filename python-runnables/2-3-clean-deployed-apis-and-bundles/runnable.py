@@ -1,8 +1,8 @@
 # Remove deployed API deployments/services and project deployments/bundles, except protected ones.
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def __init__(self, project_key, config, plugin_config):
         super().__init__(project_key, config, plugin_config)
         self.apideployer = self.client.get_apideployer()

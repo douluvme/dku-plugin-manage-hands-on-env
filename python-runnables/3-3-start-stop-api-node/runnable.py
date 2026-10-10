@@ -1,9 +1,9 @@
 # Start or stop the EC2 instance hosting the API node.
 from managehandsonenv.aws import boto_client, ec2_instance_details
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def execute(self, progress_callback):
         task = self.config["start_or_stop"]
         instance_id = self.settings.api_node_instance_id

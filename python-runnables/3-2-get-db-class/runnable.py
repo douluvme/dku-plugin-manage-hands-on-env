@@ -1,9 +1,9 @@
 # Report the current RDS DB instance class and status of the workshop database.
 from managehandsonenv.aws import boto_client
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def execute(self, progress_callback):
         rds_client = boto_client('rds', self.aws_preset(), self.settings.aws_region)
 

@@ -1,10 +1,10 @@
 # Change the owner of every project directly in the sandbox folder to admin.
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.projects import set_project_owner
 from managehandsonenv.results import failures_section, key_lines
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def get_progress_target(self):
         return (1, 'NONE')
 

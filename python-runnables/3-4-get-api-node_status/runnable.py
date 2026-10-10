@@ -1,9 +1,9 @@
 # Report whether the EC2 instance hosting the API node is running or stopped.
 from managehandsonenv.aws import boto_client, ec2_instance_details
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def execute(self, progress_callback):
         instance_id = self.settings.api_node_instance_id
 

@@ -2,10 +2,10 @@
 import time
 
 from managehandsonenv.aws import boto_client
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def get_progress_target(self):
         return (1, 'NONE')
 

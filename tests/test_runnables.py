@@ -19,6 +19,21 @@ def test_every_runnable_defines_myrunnable(folder):
     assert not hasattr(module, "do"), "dynamic choices live in resource/starter_choices.py, not runnable.py"
 
 
+@pytest.mark.parametrize("folder", runnable_dirs(), ids=lambda p: p.name)
+def test_dss_loader_finds_exactly_one_runnable(folder):
+    """Replicates dataiku.base.utils.get_clazz_in_module: the macro module must expose
+    exactly one class inheriting Runnable, or DSS raises "Multiple classes inheriting"."""
+    import inspect
+    import sys
+
+    Runnable = sys.modules["dataiku.runnables"].Runnable
+    module = load_runnable(folder)
+    found = [v for v in module.__dict__.values()
+             if inspect.isclass(v) and issubclass(v, Runnable) and v is not Runnable]
+    assert [c.__name__ for c in found] == ["MyRunnable"], (
+        "import the base module (`from managehandsonenv import base`), never the class")
+
+
 def test_starter_choices_setup_script():
     """DSS calls do() in the resource/ script named by paramsPythonSetup."""
     import importlib.util

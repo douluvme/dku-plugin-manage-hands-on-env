@@ -1,13 +1,13 @@
 # Enable or disable every attendee user (userNN); the instructor (user99) is never touched.
 import re
 
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.users import INSTRUCTOR_NUM, user_id
 
 ATTENDEE_LOGIN_PATTERN = re.compile(r"^user[0-9]{2}")
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def execute(self, progress_callback):
         enable_or_disable = self.config["enable_or_disable"]
         user_enabled = enable_or_disable != "disable"

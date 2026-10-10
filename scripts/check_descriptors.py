@@ -9,7 +9,10 @@ python-runnables/*/runnable.json:
 - no duplicate keys anywhere (a last-wins parser would silently drop params)
 - parameter names are unique and PRESET params reference an existing
   parameter set
-- every macro folder has a runnable.py defining `class MyRunnable(`
+- every macro folder has a runnable.py defining `class MyRunnable(base.HandsOnRunnable)`
+  and importing the base *module* (`from managehandsonenv import base`); importing
+  the class itself makes DSS reject the macro with "Multiple classes inheriting
+  Runnable"
 - the starter-project parameters use getChoicesFromPython (no selectChoices),
   their descriptor names a paramsPythonSetup script, and that script exists
   under resource/ and defines `do(`
@@ -165,8 +168,11 @@ def main():
             errors.append("{}: runnable.py is missing".format(rel))
             continue
         source = code.read_text(encoding="utf-8")
-        if not re.search(r"^class MyRunnable\(", source, re.M):
-            errors.append("{}: runnable.py does not define `class MyRunnable(`".format(rel))
+        if not re.search(r"^class MyRunnable\(base\.HandsOnRunnable\):", source, re.M):
+            errors.append("{}: runnable.py must define `class MyRunnable(base.HandsOnRunnable):`".format(rel))
+        if re.search(r"^from managehandsonenv\.base import", source, re.M):
+            errors.append("{}: runnable.py must `from managehandsonenv import base`, not import names from it "
+                          "(DSS: \"Multiple classes inheriting Runnable\")".format(rel))
 
         data = load(descriptor)
         if data is None:

@@ -2,13 +2,13 @@
 import traceback
 from collections import OrderedDict
 
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.projects import duplicate_project, existing_project_keys, suffixed_key
 from managehandsonenv.results import grouped_lines, html_key, render_result
 from managehandsonenv.users import get_user_folder, iter_user_nums, user_id
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def __init__(self, project_key, config, plugin_config):
         super().__init__(project_key, config, plugin_config)
         self.user_count = int(self.config["user_count"])

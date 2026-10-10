@@ -1,8 +1,13 @@
 """Base class and plugin-level settings shared by every macro of this plugin.
 
-Each ``python-runnables/*/runnable.py`` keeps a ``class MyRunnable(HandsOnRunnable)``
-(DSS loads that class by name) and implements ``execute(progress_callback)``.
-``run()`` applies the admin-project guard once, for every macro.
+Each ``python-runnables/*/runnable.py`` does ``from managehandsonenv import base`` and
+keeps a ``class MyRunnable(base.HandsOnRunnable)`` that implements
+``execute(progress_callback)``. ``run()`` applies the admin-project guard once, for
+every macro.
+
+Import the *module*, never ``from managehandsonenv.base import HandsOnRunnable``:
+DSS scans the macro module for classes inheriting ``Runnable`` and refuses to load
+it when it finds more than one ("Multiple classes inheriting ... Runnable").
 """
 from dataclasses import dataclass, fields
 from typing import Any, Dict, Optional, Tuple

@@ -1,10 +1,10 @@
 # Change the owner of one starter project's copies (KEY_99, KEY_NN ...) to each user, or back to admin.
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.projects import set_project_owner, suffixed_key
 from managehandsonenv.users import iter_user_nums_range, user_id
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def execute(self, progress_callback):
         config = self.config
         user_num_from = int(config["user_num_from"])

@@ -1,10 +1,10 @@
 # Stop sharing the shared dataset of the read-only project with every project not in the keep list.
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 
 DEFAULT_TARGETS_TO_KEEP = ["KO4EVAL", "DEMO_KO_CARDFRAUD"]
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def get_progress_target(self):
         return (1, 'NONE')
 

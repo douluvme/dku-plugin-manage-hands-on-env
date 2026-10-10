@@ -1,12 +1,12 @@
 # Delete starter projects (by user number, per user folder, or a whole folder), with a dry-run mode.
 from collections import OrderedDict
 
-from managehandsonenv.base import HandsOnRunnable
+from managehandsonenv import base
 from managehandsonenv.deletion import PROJECT, apply, build_plan
 from managehandsonenv.results import failures_section, folder_marker, grouped_lines, heading, html_key, key_lines
 
 
-class MyRunnable(HandsOnRunnable):
+class MyRunnable(base.HandsOnRunnable):
     def __init__(self, project_key, config, plugin_config):
         super().__init__(project_key, config, plugin_config)
         self.plan = build_plan(self.client, self.settings, self.config, self.project_key)
