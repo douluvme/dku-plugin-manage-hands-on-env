@@ -1,9 +1,10 @@
-"""Load every macro the way DSS does (by file) and exercise the ones that need no AWS."""
+"""Load every macro the way DSS does (by file) and check it delegates to its feature."""
 import pytest
 from conftest import ROOT, load_runnable, runnable_dirs
 from fakes import FakeClient
 
 from managehandsonenv.base import HandsOnRunnable, Settings
+from managehandsonenv.features import FEATURES, get_feature
 from managehandsonenv.starters import STARTERS
 
 
@@ -12,11 +13,26 @@ def folder_named(name):
 
 
 @pytest.mark.parametrize("folder", runnable_dirs(), ids=lambda p: p.name)
-def test_every_runnable_defines_myrunnable(folder):
+def test_every_runnable_delegates_to_a_registered_feature(folder):
     module = load_runnable(folder)
     assert issubclass(module.MyRunnable, HandsOnRunnable)
-    assert module.MyRunnable.execute is not HandsOnRunnable.execute, "execute() must be overridden"
+    assert module.MyRunnable.feature_id in FEATURES, "feature_id must name a registered feature"
+    assert get_feature(module.MyRunnable.feature_id).macro_folder == folder.name
+    assert module.MyRunnable.execute is HandsOnRunnable.execute, "the body lives in managehandsonenv.features"
     assert not hasattr(module, "do"), "dynamic choices live in resource/starter_choices.py, not runnable.py"
+
+
+def test_every_feature_has_a_macro():
+    folders = {p.name for p in runnable_dirs()}
+    assert {f.macro_folder for f in FEATURES.values()} == folders
+
+
+def test_runnable_without_feature_id_is_not_runnable(fake_client):
+    class Bare(HandsOnRunnable):
+        pass
+
+    with pytest.raises(NotImplementedError):
+        Bare("ADMINV4", {}, {}).run(lambda p: None)
 
 
 @pytest.mark.parametrize("folder", runnable_dirs(), ids=lambda p: p.name)
@@ -146,8 +162,11 @@ def test_delete_macro_dry_run_matches_real_run(monkeypatch, delete_type):
         monkeypatch.setattr(sys.modules["dataiku"], "api_client", lambda c=client: c)
         config = dict(DELETE_CONFIGS[delete_type], delete_type=delete_type, delete_TF=delete_TF)
         runnable = module.MyRunnable("ADMINV4", config, {})
-        assert runnable.get_progress_target() == (max(len(runnable.targets), 1), "NONE")
-        outputs[delete_TF] = runnable.run(lambda p: None)
+        target, unit = runnable.get_progress_target()
+        assert unit == "NONE" and target >= 1
+        progress = []
+        outputs[delete_TF] = runnable.run(progress.append)
+        assert progress == list(range(1, target + 1))
 
     dry, real = outputs[False], outputs[True]
     assert dry.startswith("<h4>Identified ")

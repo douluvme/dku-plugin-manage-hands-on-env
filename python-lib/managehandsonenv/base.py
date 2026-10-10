@@ -1,52 +1,36 @@
-"""Base class and plugin-level settings shared by every macro of this plugin.
+"""Base class shared by every macro (python runnable) of this plugin.
 
 Each ``python-runnables/*/runnable.py`` does ``from managehandsonenv import base`` and
-keeps a ``class MyRunnable(base.HandsOnRunnable)`` that implements
-``execute(progress_callback)``. ``run()`` applies the admin-project guard once, for
-every macro.
+keeps a ``class MyRunnable(base.HandsOnRunnable)`` that names the feature it runs::
+
+    from managehandsonenv import base
+
+    class MyRunnable(base.HandsOnRunnable):
+        feature_id = "duplicate_starters"
+
+``run()`` applies the admin-project guard once, for every macro, then delegates to
+the registered :class:`~managehandsonenv.features.types.Feature`.
 
 Import the *module*, never ``from managehandsonenv.base import HandsOnRunnable``:
 DSS scans the macro module for classes inheriting ``Runnable`` and refuses to load
 it when it finds more than one ("Multiple classes inheriting ... Runnable").
 """
-from dataclasses import dataclass, fields
 from typing import Any, Dict, Optional, Tuple
 
 import dataiku
 from dataiku.runnables import Runnable
 
-
-@dataclass(frozen=True)
-class Settings:
-    """Environment-specific values, read from the plugin settings (``plugin_config``).
-
-    Every field has a default matching the historical hard-coded value, so the
-    plugin keeps working when the settings page was never saved.
-    """
-
-    admin_project_key: str = "ADMINV4"
-    sandbox_folder: str = "SANDBOX"
-    aws_region: str = "ap-northeast-2"
-    rds_instance_id: str = "postgres-mag"
-    api_node_instance_id: str = "i-0e7ccb12c93ac1df2"
-    readonly_project_key: str = "READONLY"
-    shared_dataset_name: str = "credit_score"
-    protected_bundle_prefix: str = "READONLY"
-
-    @classmethod
-    def from_plugin_config(cls, plugin_config: Optional[Dict[str, Any]]) -> "Settings":
-        """Build settings from ``plugin_config``; blank or missing values keep the default."""
-        plugin_config = plugin_config or {}
-        values = {}
-        for field in fields(cls):
-            value = plugin_config.get(field.name)
-            if isinstance(value, str) and value.strip():
-                values[field.name] = value.strip()
-        return cls(**values)
+from managehandsonenv.context import Context
+from managehandsonenv.features import get_feature
+from managehandsonenv.features.types import Feature
+from managehandsonenv.settings import Settings  # noqa: F401  (re-exported for callers of base.Settings)
 
 
 class HandsOnRunnable(Runnable):
     """Common constructor, settings, API client and admin guard for all macros."""
+
+    #: id of the feature (see ``managehandsonenv.features``) this macro runs
+    feature_id: Optional[str] = None
 
     def __init__(self, project_key: str, config: Optional[Dict[str, Any]], plugin_config: Optional[Dict[str, Any]]):
         self.project_key = project_key
@@ -54,10 +38,25 @@ class HandsOnRunnable(Runnable):
         self.plugin_config = plugin_config or {}
         self.settings = Settings.from_plugin_config(self.plugin_config)
         self.client = dataiku.api_client()
+        self.context = Context(
+            client=self.client,
+            settings=self.settings,
+            plugin_config=self.plugin_config,
+            project_key=self.project_key,
+        )
+
+    @property
+    def feature(self) -> Feature:
+        if self.feature_id is None:
+            raise NotImplementedError("{} sets no feature_id".format(type(self).__name__))
+        return get_feature(self.feature_id)
 
     def get_progress_target(self) -> Optional[Tuple[int, str]]:
-        """Subclasses override when they report progress."""
-        return None
+        feature = self.feature
+        if feature.progress_target is None:
+            return None
+        target = feature.progress_target(self.context, self.config)
+        return None if target is None else (target, 'NONE')
 
     def run(self, progress_callback):
         if self.project_key != self.settings.admin_project_key:
@@ -69,12 +68,8 @@ class HandsOnRunnable(Runnable):
         return self.execute(progress_callback)
 
     def execute(self, progress_callback):
-        raise NotImplementedError
+        return self.feature.run(self.context, self.config, progress_callback)
 
     def aws_preset(self) -> Dict[str, Any]:
         """The ``aws_account`` preset: plugin-level first, then the macro's own parameter."""
-        for source in (self.plugin_config, self.config):
-            preset = source.get("aws_account")
-            if isinstance(preset, dict) and preset.get("aws_access_key_id"):
-                return preset
-        return {}
+        return self.context.aws_preset(self.config)

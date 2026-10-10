@@ -66,11 +66,12 @@ class DeleteResult:
 class DeletePlan:
     """Base class: builds the target list from the macro config and the folder tree."""
 
-    def __init__(self, client, settings, config: Dict[str, Any], running_project_key: str):
+    def __init__(self, client, settings, config: Dict[str, Any], running_project_key: str, log=print):
         self.client = client
         self.settings = settings
         self.config = config or {}
         self.running_project_key = running_project_key
+        self.log = log
 
     def keep_keys(self) -> Set[str]:
         """``projects_to_keep`` plus the project the macro runs from."""
@@ -106,11 +107,11 @@ class ByUserNum(DeletePlan):
                     targets.append(Target(PROJECT, target_key, group=user))
                     deps.append(target_key)
                 else:
-                    print("Skip {} (does not exist)".format(target_key))
+                    self.log("Skip {} (does not exist)".format(target_key))
 
             folder = user_folders.get(user)
             if folder is None:
-                print("Skip deleting folder {} (does not exist)".format(user))
+                self.log("Skip deleting folder {} (does not exist)".format(user))
             else:
                 targets.append(Target(FOLDER, user, group=user, depends_on=tuple(deps), handle=folder))
         return targets
@@ -174,16 +175,16 @@ PLANS = {
 }
 
 
-def build_plan(client, settings, config: Dict[str, Any], running_project_key: str) -> DeletePlan:
+def build_plan(client, settings, config: Dict[str, Any], running_project_key: str, log=print) -> DeletePlan:
     """The :class:`DeletePlan` matching ``config["delete_type"]``."""
     delete_type = (config or {}).get("delete_type")
     if delete_type not in PLANS:
         raise ValueError("Unknown delete_type: {!r} (expected one of {})".format(delete_type, sorted(PLANS)))
-    return PLANS[delete_type](client, settings, config, running_project_key)
+    return PLANS[delete_type](client, settings, config, running_project_key, log=log)
 
 
 def apply(targets: Iterable[Target], client, dry_run: bool,
-          progress_callback: Optional[Callable[[int], None]] = None) -> DeleteResult:
+          progress_callback: Optional[Callable[[int], None]] = None, log=print) -> DeleteResult:
     """Delete the targets in order (or only report them when ``dry_run``).
 
     A folder is skipped, and reported as a failure, when any item it depends on
@@ -198,20 +199,20 @@ def apply(targets: Iterable[Target], client, dry_run: bool,
         indent = "  " * target.depth
 
         if target.keep:
-            print("{}Keep {} {}".format(indent, target.kind, target.key))
+            log("{}Keep {} {}".format(indent, target.kind, target.key))
             result.kept.append(target)
             continue
 
         blockers = [key for key in target.depends_on if key in failed]
         if blockers:
             reason = "not deleted: {} could not be deleted".format(", ".join(blockers))
-            print("{}Skip {} {} ({})".format(indent, target.kind, target.key, reason))
+            log("{}Skip {} {} ({})".format(indent, target.kind, target.key, reason))
             result.failures.append((target.key, reason))
             failed.add(target.key)
             continue
 
         if dry_run:
-            print("{}Would delete {} {}".format(indent, target.kind, target.key))
+            log("{}Would delete {} {}".format(indent, target.kind, target.key))
             result.done.append(target)
             continue
 
@@ -219,10 +220,10 @@ def apply(targets: Iterable[Target], client, dry_run: bool,
             if target.kind == PROJECT:
                 delete_project(client, target.key)
             else:
-                print("{}Delete folder {}".format(indent, target.key))
+                log("{}Delete folder {}".format(indent, target.key))
                 target.handle.delete()
         except Exception as e:
-            print("{}{} {} delete failed: {}".format(indent, target.kind, target.key, e))
+            log("{}{} {} delete failed: {}".format(indent, target.kind, target.key, e))
             traceback.print_exc()
             result.failures.append((target.key, str(e)))
             failed.add(target.key)
