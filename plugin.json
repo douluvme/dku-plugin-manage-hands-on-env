@@ -33,6 +33,8 @@
 
         "licenseInfo": "Apache Software License"
     },
+    /* Plugin settings. They arrive in every macro as plugin_config and are read by
+       managehandsonenv.base.Settings; an empty value falls back to the default shown here. */
     "params": [
     {
         "type": "PRESET",
@@ -40,6 +42,60 @@
         "label": "AWS Account",
         "parameterSetId": "aws-credentials",
         "mandatory": true
+    },
+    {
+        "type": "STRING",
+        "name": "admin_project_key",
+        "label": "Admin project key",
+        "description": "Every macro refuses to run from any other project.",
+        "defaultValue": "ADMINV4"
+    },
+    {
+        "type": "STRING",
+        "name": "sandbox_folder",
+        "label": "Sandbox project folder",
+        "description": "Name of the project folder that holds the userNN folders.",
+        "defaultValue": "SANDBOX"
+    },
+    {
+        "type": "STRING",
+        "name": "aws_region",
+        "label": "AWS region",
+        "description": "Region of the RDS instance and the API node EC2 instance.",
+        "defaultValue": "ap-northeast-2"
+    },
+    {
+        "type": "STRING",
+        "name": "rds_instance_id",
+        "label": "RDS DB instance identifier",
+        "defaultValue": "postgres-mag"
+    },
+    {
+        "type": "STRING",
+        "name": "api_node_instance_id",
+        "label": "API node EC2 instance id",
+        "defaultValue": "i-0e7ccb12c93ac1df2"
+    },
+    {
+        "type": "STRING",
+        "name": "readonly_project_key",
+        "label": "Read-only project key",
+        "description": "Project that exposes the shared dataset (used by Stop Sharing Datasets).",
+        "defaultValue": "READONLY"
+    },
+    {
+        "type": "STRING",
+        "name": "shared_dataset_name",
+        "label": "Shared dataset name",
+        "description": "Dataset of the read-only project whose sharing rules are cleaned up.",
+        "defaultValue": "credit_score"
+    },
+    {
+        "type": "STRING",
+        "name": "protected_bundle_prefix",
+        "label": "Protected deployment/bundle prefix",
+        "description": "Project deployments and bundles whose id starts with this prefix are never deleted.",
+        "defaultValue": "READONLY"
     }
     ]
 }

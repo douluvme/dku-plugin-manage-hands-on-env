@@ -9,13 +9,13 @@ class MyRunnable(HandsOnRunnable):
     def execute(self, progress_callback):
         config = self.config
         task = config["start_or_stop"]
-        instance_id = 'i-0e7ccb12c93ac1df2'
+        instance_id = self.settings.api_node_instance_id
 
         ec2_waiter = 'instance_running'
         if task == 'stop':
             ec2_waiter = 'instance_stopped'
 
-        ec2_client = boto_client('ec2', config.get("aws_account", {}), 'ap-northeast-2')
+        ec2_client = boto_client('ec2', self.aws_preset(), self.settings.aws_region)
 
         instance_name, instance_state = ec2_instance_details(ec2_client, instance_id)
 

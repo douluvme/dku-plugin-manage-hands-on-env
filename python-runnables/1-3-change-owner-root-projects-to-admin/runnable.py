@@ -15,7 +15,7 @@ class MyRunnable(HandsOnRunnable):
         total_update_count = 0
         result_string = ""
 
-        sandbox_folder = client.get_project_folder('SANDBOX')
+        sandbox_folder = client.get_project_folder(self.settings.sandbox_folder)
         project_list = sandbox_folder.list_project_keys()
 
         for project_id in project_list:

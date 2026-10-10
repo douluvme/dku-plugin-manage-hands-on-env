@@ -45,6 +45,7 @@ class MyRunnable(HandsOnRunnable):
         prj_deployment_count = 0
         prj_bundle_count = 0
         progress = 1
+        protected_prefix = self.settings.protected_bundle_prefix
 
         if api_or_bundle in ['api', 'both']:
             deployments = apideployer.list_deployments()
@@ -84,7 +85,7 @@ class MyRunnable(HandsOnRunnable):
             result_string = f"{result_string}</br></br>&lt;List of project deployment&gt;"
 
             for deployment in project_deployments:
-                if deployment.id.startswith('READONLY'):
+                if deployment.id.startswith(protected_prefix):
                     print("Skip", deployment.id)
                 else:
                     print("### Project Deployment ID = ", deployment.id)
@@ -100,7 +101,7 @@ class MyRunnable(HandsOnRunnable):
             result_string = f"{result_string}</br></br>&lt;List of project bundle&gt;"
 
             for bundle in bundles:
-                if bundle.id.startswith('READONLY'):
+                if bundle.id.startswith(protected_prefix):
                     print("Skip", bundle.id)
                 else:
                     print("### Project Bundle ID = ", bundle.id)

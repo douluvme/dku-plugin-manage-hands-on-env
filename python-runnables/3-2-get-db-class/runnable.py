@@ -7,9 +7,9 @@ class MyRunnable(HandsOnRunnable):
     """Report the current RDS instance class and status."""
 
     def execute(self, progress_callback):
-        rds_client = boto_client('rds', self.config.get("aws_account", {}), 'ap-northeast-2')
+        rds_client = boto_client('rds', self.aws_preset(), self.settings.aws_region)
 
-        response = rds_client.describe_db_instances(DBInstanceIdentifier='postgres-mag')
+        response = rds_client.describe_db_instances(DBInstanceIdentifier=self.settings.rds_instance_id)
         db_class = response['DBInstances'][0]['DBInstanceClass']
         db_status = response['DBInstances'][0]['DBInstanceStatus']
 

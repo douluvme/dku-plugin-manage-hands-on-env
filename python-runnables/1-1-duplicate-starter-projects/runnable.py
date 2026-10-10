@@ -29,7 +29,7 @@ class MyRunnable(HandsOnRunnable):
 
     def execute(self, progress_callback):
         client = self.client
-        sandbox_folder = 'SANDBOX'
+        sandbox_folder = self.settings.sandbox_folder
 
         print(f"Number of users = {self.number_of_users}")
 

@@ -10,14 +10,16 @@ class MyRunnable(HandsOnRunnable):
 
     def execute(self, progress_callback):
         client = self.client
+        readonly_key = self.settings.readonly_project_key
+        dataset_name = self.settings.shared_dataset_name
 
-        project = client.get_project("READONLY")
+        project = client.get_project(readonly_key)
 
         settings = project.get_settings()
         objects = settings.get_raw()['exposedObjects']['objects']
-        exposed = next((obj for obj in objects if obj['localName'] == 'credit_score'), None)
+        exposed = next((obj for obj in objects if obj['localName'] == dataset_name), None)
         if exposed is None:
-            raise RuntimeError("Dataset credit_score is not exposed by project READONLY")
+            raise RuntimeError(f"Dataset {dataset_name} is not exposed by project {readonly_key}")
         rules = exposed['rules']
 
         index_list = []

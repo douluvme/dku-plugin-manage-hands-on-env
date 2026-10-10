@@ -15,9 +15,9 @@ class MyRunnable(HandsOnRunnable):
         config = self.config
         db_class = config["db_class"]
         wait_TF = config["wait_TF"]
-        rds_instance_id = 'postgres-mag'
+        rds_instance_id = self.settings.rds_instance_id
 
-        rds_client = boto_client('rds', config.get("aws_account", {}), 'ap-northeast-2')
+        rds_client = boto_client('rds', self.aws_preset(), self.settings.aws_region)
 
         rds_client.modify_db_instance(
             DBInstanceIdentifier=rds_instance_id,

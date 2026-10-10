@@ -21,7 +21,7 @@ class MyRunnable(HandsOnRunnable):
         super().__init__(project_key, config, plugin_config)
         config = self.config
         client = self.client
-        self.sandbox_folder = 'SANDBOX'
+        self.sandbox_folder = self.settings.sandbox_folder
 
         if config["delete_type"] == 'user_num':
             project_keys = self._get_project_keys()
