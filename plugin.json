@@ -38,7 +38,7 @@
         "type": "PRESET",
         "name": "aws_account",
         "label": "AWS Account",
-        "parameterSetId": "aws_credentials",
+        "parameterSetId": "aws-credentials",
         "mandatory": true
     }
     ]

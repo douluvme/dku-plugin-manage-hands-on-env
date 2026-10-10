@@ -35,6 +35,13 @@
             "label": "Wait until modification completes?",
             "description" : "Macro will exit only after modification completes if checked. Otherwise macro will exit immediately.",
             "defaultValue": false
+        },
+        {
+            "name": "aws_account",
+            "label": "AWS Account",
+            "type": "PRESET",
+            "parameterSetId": "aws-credentials",
+            "mandatory": true
         }
     ],
 
@@ -73,15 +80,6 @@
     "macroRoles": [
         {
             "type": "PROJECT_MACROS"
-        } 
-    ],
-    "params": [
-    {
-        "name": "aws_account",
-        "label": "AWS Account",
-        "type": "PRESET",
-        "parameterSetId": "aws-credentials",
-        "mandatory": true
-    }
+        }
     ]
 }

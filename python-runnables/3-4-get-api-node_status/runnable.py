@@ -27,7 +27,7 @@ class MyRunnable(Runnable):
             time.sleep(10)
             return None
 
-        rds_client = boto3.client('rds',
+        ec2_client = boto3.client('ec2',
             'ap-northeast-2',
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key)
