@@ -1,14 +1,15 @@
 /* Hands-on Workshop Console: front end of the plugin webapp.
  *
  * Talks to backend.py through the /api/... routes (see managehandsonenv.webapp.api).
- * Feature buttons and forms are built from what the backend sends, so a feature
+ * The left menu and the forms are built from what the backend sends, so a feature
  * added to managehandsonenv.features shows up here without any JS change.
  */
 (function () {
   "use strict";
 
   var POLL_MS = 1000;
-  var state = { context: null, feature: null, schema: null, job: null, poller: null, logLength: 0 };
+  var STORAGE_KEY = "hands-on-console-ui";
+  var state = { context: null, feature: null, schema: null, job: null, poller: null, logLength: 0, tab: "run", historyCount: 0 };
 
   // ---- backend ---------------------------------------------------------------
   function api(path, options) {
@@ -63,6 +64,18 @@
     return d.toTimeString().slice(0, 8);
   }
 
+  // Per-viewer UI preferences (collapsed sidebar, closed sections). Best effort only.
+  function loadPrefs() {
+    try { return JSON.parse(window.localStorage.getItem(STORAGE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function savePrefs(update) {
+    try {
+      var prefs = loadPrefs();
+      Object.keys(update).forEach(function (k) { prefs[k] = update[k]; });
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+    } catch (e) { /* storage unavailable: nothing to remember */ }
+  }
+
   // ---- visibility conditions ------------------------------------------------
   // Supports the subset used by the descriptors: model.x == 'v', model.x != 'v', model.x,
   // !model.x, combined with && and || (|| binds loosest). No parentheses.
@@ -84,33 +97,111 @@
     });
   }
 
-  // ---- button bar -------------------------------------------------------------
-  function renderButtons(context) {
-    var nav = $("hoc-buttons");
+  // ---- sidebar menu -----------------------------------------------------------
+  function renderMenu(context) {
+    var prefs = loadPrefs();
+    var closed = prefs.closedSections || {};
+    var nav = $("hoc-menu");
     nav.innerHTML = "";
-    context.categories.forEach(function (category, index) {
-      var buttons = category.features.map(function (feature) {
-        return el("button", {
-          type: "button",
-          class: "hoc-feature-btn" + (feature.destructive ? " destructive" : ""),
-          "data-feature": feature.id,
-          title: feature.description || "",
-          text: feature.label,
-          onclick: function () { selectFeature(feature.id); }
-        });
+    context.categories.forEach(function (category) {
+      var items = category.features.map(function (feature) {
+        var children = [el("span", { class: "hoc-item-label", text: feature.menu_label || feature.label })];
+        if (feature.destructive) {
+          children.push(el("span", { class: "hoc-flag", text: "⚠", title: feature.confirm || "Changes the instance" }));
+        }
+        children.push(el("span", { class: "hoc-dot", hidden: "hidden", "data-dot": feature.id }));
+        return el("li", { role: "none" }, [
+          el("button", {
+            type: "button",
+            role: "menuitem",
+            class: "hoc-item",
+            "data-feature": feature.id,
+            title: feature.label + (feature.description ? " — " + feature.description : ""),
+            onclick: function () { selectFeature(feature.id); },
+            onkeydown: menuKeydown
+          }, children)
+        ]);
       });
-      nav.appendChild(el("div", { class: "hoc-group hoc-group-" + index }, [
-        el("div", { class: "hoc-group-name", text: category.name }),
-        el("div", { class: "hoc-group-buttons" }, buttons)
-      ]));
+      var section = el("div", { class: "hoc-section" + (closed[category.name] ? "" : " open"), "data-section": category.name }, [
+        el("button", {
+          type: "button",
+          class: "hoc-section-head",
+          "aria-expanded": closed[category.name] ? "false" : "true",
+          onclick: function () { toggleSection(section, category.name); }
+        }, [
+          el("span", { class: "hoc-chevron", text: "▼" }),
+          el("span", { text: category.menu_name || category.name })
+        ]),
+        el("ul", { class: "hoc-items", role: "menu" }, items)
+      ]);
+      nav.appendChild(section);
     });
+  }
+
+  function toggleSection(section, name) {
+    var open = !section.classList.contains("open");
+    section.classList.toggle("open", open);
+    section.querySelector(".hoc-section-head").setAttribute("aria-expanded", open ? "true" : "false");
+    var closed = loadPrefs().closedSections || {};
+    if (open) delete closed[name]; else closed[name] = true;
+    savePrefs({ closedSections: closed });
+  }
+
+  function menuKeydown(event) {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    var items = Array.prototype.filter.call(document.querySelectorAll(".hoc-item"), function (item) {
+      return item.offsetParent !== null; // visible (section open, sidebar expanded)
+    });
+    var index = items.indexOf(event.currentTarget);
+    if (index < 0) return;
+    event.preventDefault();
+    var next = items[(index + (event.key === "ArrowDown" ? 1 : items.length - 1)) % items.length];
+    next.focus();
+  }
+
+  function markSelected(featureId) {
+    Array.prototype.forEach.call(document.querySelectorAll(".hoc-item"), function (item) {
+      var active = item.getAttribute("data-feature") === featureId;
+      item.classList.toggle("active", active);
+      if (active) item.setAttribute("aria-current", "true"); else item.removeAttribute("aria-current");
+    });
+  }
+
+  function updateRunningDots() {
+    var runningId = state.job && state.job.active ? state.job.feature_id : null;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-dot]"), function (dot) {
+      dot.hidden = dot.getAttribute("data-dot") !== runningId;
+    });
+    $("hoc-history-dot").hidden = !runningId;
+  }
+
+  function setSidebarCollapsed(collapsed) {
+    var sidebar = $("hoc-sidebar");
+    sidebar.classList.toggle("collapsed", collapsed);
+    var button = $("hoc-collapse");
+    button.title = collapsed ? "Expand menu" : "Collapse menu";
+    button.setAttribute("aria-label", button.title);
+    savePrefs({ sidebarCollapsed: collapsed });
+  }
+
+  // ---- tabs -------------------------------------------------------------------
+  function showTab(name) {
+    state.tab = name;
+    Array.prototype.forEach.call(document.querySelectorAll(".hoc-tab"), function (tab) {
+      var active = tab.getAttribute("data-tab") === name;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".hoc-pane"), function (pane) {
+      pane.hidden = pane.getAttribute("data-pane") !== name;
+    });
+    if (name === "history") refreshHistory();
   }
 
   // ---- form -------------------------------------------------------------------
   function selectFeature(featureId) {
-    Array.prototype.forEach.call(document.querySelectorAll(".hoc-feature-btn"), function (button) {
-      button.classList.toggle("active", button.getAttribute("data-feature") === featureId);
-    });
+    markSelected(featureId);
+    showTab("run");
     api("/api/features/" + encodeURIComponent(featureId) + "/form").then(function (schema) {
       state.feature = featureId;
       state.schema = schema;
@@ -265,6 +356,7 @@
     state.logLength = 0;
     $("hoc-log").textContent = "";
     $("hoc-job").hidden = false;
+    showTab("run");
     renderJob(job);
     if (follow && job.active) startPolling(job.id);
     else stopPolling();
@@ -304,6 +396,7 @@
     error.hidden = !job.error;
     error.textContent = job.error || "";
     $("hoc-result").innerHTML = job.result_html || "";
+    updateRunningDots();
   }
 
   function startPolling(jobId) {
@@ -332,7 +425,7 @@
 
   // ---- history ----------------------------------------------------------------
   function refreshHistory() {
-    api("/api/jobs?limit=20").then(function (body) {
+    api("/api/jobs?limit=50").then(function (body) {
       var list = $("hoc-history");
       list.innerHTML = "";
       if (!body.jobs.length) {
@@ -349,8 +442,12 @@
           el("span", { text: job.label + (job.destructive ? " ⚠" : "") })
         ]));
       });
+      state.historyCount = body.jobs.length;
+      $("hoc-history-count").textContent = body.jobs.length ? String(body.jobs.length) : "";
       if (body.current && (!state.job || state.job.id !== body.current.id)) {
         showJob(body.current, true);
+      } else {
+        updateRunningDots();
       }
     }).catch(function () { /* history is best effort */ });
   }
@@ -358,13 +455,21 @@
   // ---- boot -------------------------------------------------------------------
   function boot() {
     $("hoc-run").addEventListener("click", runFeature);
+    $("hoc-collapse").addEventListener("click", function () {
+      setSidebarCollapsed(!$("hoc-sidebar").classList.contains("collapsed"));
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".hoc-tab"), function (tab) {
+      tab.addEventListener("click", function () { showTab(tab.getAttribute("data-tab")); });
+    });
+    if (loadPrefs().sidebarCollapsed) setSidebarCollapsed(true);
+
     api("/api/context").then(function (context) {
       state.context = context;
       $("hoc-project").textContent = "project " + context.project_key;
-      renderButtons(context);
+      renderMenu(context);
       if (!context.allowed) {
         banner("This console only runs inside project " + context.admin_project_key +
-               " (this webapp lives in " + context.project_key + "). Buttons are shown but Run is disabled.");
+               " (this webapp lives in " + context.project_key + "). The menu is shown but Run is disabled.");
       }
       updateRunButton();
       refreshHistory();

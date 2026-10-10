@@ -1,48 +1,66 @@
 <div id="hoc" class="hoc">
-  <header class="hoc-header">
-    <div class="hoc-title">
-      <span class="hoc-title-main">Hands-on Workshop Console</span>
-      <span id="hoc-project" class="hoc-title-sub"></span>
+  <aside id="hoc-sidebar" class="hoc-sidebar">
+    <div class="hoc-sidebar-head">
+      <span class="hoc-sidebar-title">Hands-on Console</span>
+      <button id="hoc-collapse" type="button" class="hoc-collapse" title="Collapse menu" aria-label="Collapse menu">&#x276E;</button>
     </div>
-    <div id="hoc-banner" class="hoc-banner" hidden></div>
-    <nav id="hoc-buttons" class="hoc-buttons" aria-label="Features"></nav>
-  </header>
+    <nav id="hoc-menu" class="hoc-menu" aria-label="Features"></nav>
+  </aside>
 
   <main class="hoc-main">
-    <section id="hoc-feature" class="hoc-panel" hidden>
-      <h2 id="hoc-feature-label"></h2>
-      <p id="hoc-feature-description" class="hoc-muted"></p>
-      <form id="hoc-form" class="hoc-form" autocomplete="off"></form>
-      <div class="hoc-actions">
-        <button id="hoc-run" type="button" class="btn btn-primary">Run</button>
-        <span id="hoc-run-hint" class="hoc-muted"></span>
+    <header class="hoc-header">
+      <div class="hoc-title">
+        <span class="hoc-title-main">Hands-on Workshop Console</span>
+        <span id="hoc-project" class="hoc-title-sub"></span>
       </div>
+      <div id="hoc-banner" class="hoc-banner" hidden></div>
+      <div class="hoc-tabs" role="tablist">
+        <button id="hoc-tab-run" type="button" role="tab" class="hoc-tab active" data-tab="run">Run</button>
+        <button id="hoc-tab-history" type="button" role="tab" class="hoc-tab" data-tab="history">
+          History <span id="hoc-history-count" class="hoc-count"></span><span id="hoc-history-dot" class="hoc-dot" hidden></span>
+        </button>
+      </div>
+    </header>
+
+    <section id="hoc-pane-run" class="hoc-pane" data-pane="run">
+      <section id="hoc-feature" class="hoc-panel" hidden>
+        <h2 id="hoc-feature-label"></h2>
+        <p id="hoc-feature-description" class="hoc-muted"></p>
+        <form id="hoc-form" class="hoc-form" autocomplete="off"></form>
+        <div class="hoc-actions">
+          <button id="hoc-run" type="button" class="hoc-run-btn">Run</button>
+          <span id="hoc-run-hint" class="hoc-muted"></span>
+        </div>
+      </section>
+
+      <section id="hoc-empty" class="hoc-panel hoc-muted">
+        Pick a feature in the menu to see its options.
+      </section>
+
+      <section id="hoc-job" class="hoc-panel" hidden>
+        <div class="hoc-job-head">
+          <h2>Job <span id="hoc-job-label"></span></h2>
+          <span id="hoc-job-status" class="hoc-status"></span>
+        </div>
+        <div class="hoc-progress">
+          <div id="hoc-progress-bar" class="hoc-progress-bar"></div>
+          <span id="hoc-progress-text" class="hoc-progress-text"></span>
+        </div>
+        <details class="hoc-log" open>
+          <summary>Log</summary>
+          <pre id="hoc-log"></pre>
+        </details>
+        <div id="hoc-error" class="hoc-error" hidden></div>
+        <div id="hoc-result" class="hoc-result"></div>
+      </section>
     </section>
 
-    <section id="hoc-empty" class="hoc-panel hoc-muted">
-      Pick a feature above to see its options.
-    </section>
-
-    <section id="hoc-job" class="hoc-panel" hidden>
-      <div class="hoc-job-head">
-        <h2>Job <span id="hoc-job-label"></span></h2>
-        <span id="hoc-job-status" class="hoc-status"></span>
-      </div>
-      <div class="hoc-progress">
-        <div id="hoc-progress-bar" class="hoc-progress-bar"></div>
-        <span id="hoc-progress-text" class="hoc-progress-text"></span>
-      </div>
-      <details class="hoc-log" open>
-        <summary>Log</summary>
-        <pre id="hoc-log"></pre>
-      </details>
-      <div id="hoc-error" class="hoc-error" hidden></div>
-      <div id="hoc-result" class="hoc-result"></div>
-    </section>
-
-    <section class="hoc-panel">
-      <h2>History</h2>
-      <ul id="hoc-history" class="hoc-history"></ul>
+    <section id="hoc-pane-history" class="hoc-pane" data-pane="history" hidden>
+      <section class="hoc-panel">
+        <h2>Job history</h2>
+        <p class="hoc-muted">Jobs run by this backend since it was started. Click one to see its log and result.</p>
+        <ul id="hoc-history" class="hoc-history"></ul>
+      </section>
     </section>
   </main>
 </div>

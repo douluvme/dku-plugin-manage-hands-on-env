@@ -23,10 +23,12 @@ def context_payload(ctx: Context) -> Dict[str, Any]:
         "categories": [
             {
                 "name": category,
+                "menu_name": features[0].menu_category_or_category,
                 "features": [
                     {
                         "id": feature.id,
                         "label": feature.label,
+                        "menu_label": feature.menu_label_or_label,
                         "description": feature.description,
                         "destructive": feature.destructive,
                         "confirm": feature.confirm,

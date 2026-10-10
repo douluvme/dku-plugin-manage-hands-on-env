@@ -10,6 +10,7 @@ from managehandsonenv.results import failures_section, folder_marker, grouped_li
 from managehandsonenv.users import INSTRUCTOR_NUM, user_id
 
 CATEGORY = "⚠️ Hands-on 2: Housekeeping"
+MENU_CATEGORY = "Housekeeping"
 
 ATTENDEE_LOGIN_PATTERN = re.compile(r"^user[0-9]{2}")
 DEFAULT_TARGETS_TO_KEEP = ["KO4EVAL", "DEMO_KO_CARDFRAUD"]
@@ -232,6 +233,8 @@ def stop_sharing(ctx: Context, params: Dict[str, Any], progress_callback) -> str
 FEATURES = [
     Feature(
         id="delete_projects",
+        menu_label="Delete Starters",
+        menu_category=MENU_CATEGORY,
         label="1.Delete Starter Projects",
         category=CATEGORY,
         macro_folder="2-1-delete-starter-projects",
@@ -243,6 +246,8 @@ FEATURES = [
     ),
     Feature(
         id="toggle_users",
+        menu_label="Enable/Disable Users",
+        menu_category=MENU_CATEGORY,
         label="2.Enable/disable Attendee Users",
         category=CATEGORY,
         macro_folder="2-2-enable-disable-attendee-users",
@@ -253,6 +258,8 @@ FEATURES = [
     ),
     Feature(
         id="clean_deployments",
+        menu_label="Clean Deployments",
+        menu_category=MENU_CATEGORY,
         label="3.Clean Deployed APIs and Bundles",
         category=CATEGORY,
         macro_folder="2-3-clean-deployed-apis-and-bundles",
@@ -264,6 +271,8 @@ FEATURES = [
     ),
     Feature(
         id="stop_sharing",
+        menu_label="Stop Sharing",
+        menu_category=MENU_CATEGORY,
         label="4.Stop Sharing Datasets",
         category=CATEGORY,
         macro_folder="2-4-stop-sharing-datasets",

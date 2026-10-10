@@ -7,6 +7,7 @@ from managehandsonenv.context import Context
 from managehandsonenv.features.types import Feature
 
 CATEGORY = "⚠️ Hands-on 3: Manage Workshop Environment"
+MENU_CATEGORY = "Workshop Environment"
 
 
 # --- 3-1 modify DB class ------------------------------------------------------
@@ -96,6 +97,8 @@ def api_node_status(ctx: Context, params: Dict[str, Any], progress_callback) -> 
 FEATURES = [
     Feature(
         id="modify_db_class",
+        menu_label="Modify DB Size",
+        menu_category=MENU_CATEGORY,
         label="1.Modify RDS DB size",
         category=CATEGORY,
         macro_folder="3-1-modify-db-class",
@@ -107,6 +110,8 @@ FEATURES = [
     ),
     Feature(
         id="db_status",
+        menu_label="DB Status",
+        menu_category=MENU_CATEGORY,
         label="2.Get RDS DB class & status",
         category=CATEGORY,
         macro_folder="3-2-get-db-class",
@@ -115,6 +120,8 @@ FEATURES = [
     ),
     Feature(
         id="api_node_power",
+        menu_label="Start/Stop API Node",
+        menu_category=MENU_CATEGORY,
         label="3.Start/Stop API node",
         category=CATEGORY,
         macro_folder="3-3-start-stop-api-node",
@@ -125,6 +132,8 @@ FEATURES = [
     ),
     Feature(
         id="api_node_status",
+        menu_label="API Node Status",
+        menu_category=MENU_CATEGORY,
         label="4.Get API Node Status",
         category=CATEGORY,
         macro_folder="3-4-get-api-node_status",

@@ -10,6 +10,7 @@ from managehandsonenv.results import failures_section, grouped_lines, html_key, 
 from managehandsonenv.users import get_user_folder, iter_user_nums, iter_user_nums_range, user_id
 
 CATEGORY = "⚠️ Hands-on 1: Manage Starter Projects"
+MENU_CATEGORY = "Starter Projects"
 
 
 def _selected_project_keys(params: Dict[str, Any]) -> List[str]:
@@ -131,6 +132,8 @@ def sandbox_to_admin(ctx: Context, params: Dict[str, Any], progress_callback) ->
 FEATURES = [
     Feature(
         id="duplicate_starters",
+        menu_label="Duplicate Starters",
+        menu_category=MENU_CATEGORY,
         label="1.Duplicate Starter Projects",
         category=CATEGORY,
         macro_folder="1-1-duplicate-starter-projects",
@@ -140,6 +143,8 @@ FEATURES = [
     ),
     Feature(
         id="change_owner",
+        menu_label="Change Owner",
+        menu_category=MENU_CATEGORY,
         label="2.Change Projects Ownership",
         category=CATEGORY,
         macro_folder="1-2-change-owner-starter-projects",
@@ -148,6 +153,8 @@ FEATURES = [
     ),
     Feature(
         id="sandbox_to_admin",
+        menu_label="Sandbox → Admin",
+        menu_category=MENU_CATEGORY,
         label="3.Sandbox Projects → Admin",
         category=CATEGORY,
         macro_folder="1-3-change-owner-root-projects-to-admin",

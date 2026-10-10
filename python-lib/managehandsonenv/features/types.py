@@ -27,6 +27,16 @@ class Feature:
     destructive: bool = False             # the webapp asks for confirmation before running
     confirm: Optional[str] = None         # the confirmation text
     description: str = ""
+    menu_label: str = ""                  # short label for the webapp's left menu (defaults to label)
+    menu_category: str = ""               # short section name for the webapp's left menu (defaults to category)
+
+    @property
+    def menu_label_or_label(self) -> str:
+        return self.menu_label or self.label
+
+    @property
+    def menu_category_or_category(self) -> str:
+        return self.menu_category or self.category
 
     def needs_confirmation(self, params: Dict[str, Any]) -> bool:
         """Destructive features confirm, except a delete that is only a dry run."""

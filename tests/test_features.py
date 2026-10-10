@@ -48,6 +48,19 @@ def test_registry_lookups():
     assert [len(features) for _, features in categories] == [3, 4, 4]
 
 
+def test_menu_labels_are_short_and_unique():
+    labels = [f.menu_label for f in FEATURES.values()]
+    assert all(labels), "every feature needs a menu_label"
+    assert len(set(labels)) == len(labels)
+    assert max(len(label) for label in labels) <= 24
+    assert [f.menu_category for f in FEATURES.values()].count("") == 0
+    assert [name for name, _ in by_category()] != [features[0].menu_category for _, features in by_category()]
+    assert [features[0].menu_category for _, features in by_category()] == [
+        "Starter Projects", "Housekeeping", "Workshop Environment"]
+    bare = Feature(id="x", label="Long Label", category="⚠️ Cat", macro_folder="m", run=lambda c, p, cb: "")
+    assert bare.menu_label_or_label == "Long Label" and bare.menu_category_or_category == "⚠️ Cat"
+
+
 def test_destructive_features_confirm_except_dry_runs():
     assert {f.id for f in FEATURES.values() if f.destructive} == {
         "delete_projects", "toggle_users", "clean_deployments", "stop_sharing", "modify_db_class", "api_node_power",

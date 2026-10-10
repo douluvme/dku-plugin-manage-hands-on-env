@@ -29,8 +29,11 @@ def test_context_lists_features_by_category():
     assert body["allowed"] is True
     assert body["settings"]["sandbox_folder"] == "SANDBOX"
     assert [c["name"] for c in body["categories"]][0] == "⚠️ Hands-on 1: Manage Starter Projects"
+    assert [c["menu_name"] for c in body["categories"]] == ["Starter Projects", "Housekeeping", "Workshop Environment"]
     ids = [f["id"] for c in body["categories"] for f in c["features"]]
     assert ids == list(FEATURES)
+    first = body["categories"][0]["features"][0]
+    assert first["menu_label"] == "Duplicate Starters" and first["label"] == "1.Duplicate Starter Projects"
     delete = next(f for c in body["categories"] for f in c["features"] if f["id"] == "delete_projects")
     assert delete["destructive"] and delete["confirm"]
 
