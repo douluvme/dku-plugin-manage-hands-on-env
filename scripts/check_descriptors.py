@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
-"""Validate the plugin descriptors without a DSS instance.
+"""Validate the plugin descriptors and component layout without a DSS instance.
 
-Checks plugin.json, parameter-sets/*/parameter-set.json and
-python-runnables/*/runnable.json:
+Checks plugin.json, parameter-sets/*/parameter-set.json, python-runnables/*/runnable.json
+and webapps/*/webapp.json:
 
 - the files parse once // and /* */ comments are stripped (string-aware);
   `#` comments are rejected because they are not valid in DSS descriptors
 - no duplicate keys anywhere (a last-wins parser would silently drop params)
 - parameter names are unique and PRESET params reference an existing
   parameter set
-- every macro folder has a runnable.py defining `class MyRunnable(base.HandsOnRunnable)`
-  and importing the base *module* (`from managehandsonenv import base`); importing
-  the class itself makes DSS reject the macro with "Multiple classes inheriting
-  Runnable"
+- every macro folder has a runnable.py defining `class MyRunnable(base.HandsOnRunnable)`,
+  importing the base *module* (`from managehandsonenv import base`; importing the
+  class itself makes DSS reject the macro with "Multiple classes inheriting
+  Runnable") and naming a `feature_id` that exists in managehandsonenv.features
 - the starter-project parameters use getChoicesFromPython (no selectChoices),
   their descriptor names a paramsPythonSetup script, and that script exists
   under resource/ and defines `do(`
+- every webapp folder has backend.py, body.html, app.js and style.css
 
 Exit status is 1 when anything is wrong.
 """
-import json
 import pathlib
 import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "python-lib"))
+
+from managehandsonenv.descriptors import DescriptorError, load_descriptor, strip_comments  # noqa: E402
+from managehandsonenv.features import FEATURES  # noqa: E402
 
 # macro folder -> parameter that must take its choices from python (starters.py)
 STARTER_PARAMS = {
@@ -33,73 +37,9 @@ STARTER_PARAMS = {
     "2-1-delete-starter-projects": "project_keys_list",
 }
 
+WEBAPP_FILES = ("backend.py", "body.html", "app.js", "style.css")
 
-class DescriptorError(Exception):
-    pass
-
-
-def strip_comments(text):
-    """Remove // and /* */ comments outside strings. Raises on `#` comments."""
-    out = []
-    i = 0
-    n = len(text)
-    line = 1
-    in_string = False
-    while i < n:
-        c = text[i]
-        if c == "\n":
-            line += 1
-        if in_string:
-            out.append(c)
-            if c == "\\" and i + 1 < n:
-                out.append(text[i + 1])
-                i += 2
-                continue
-            if c == '"':
-                in_string = False
-            i += 1
-            continue
-        if c == '"':
-            in_string = True
-            out.append(c)
-            i += 1
-            continue
-        if text.startswith("//", i):
-            while i < n and text[i] != "\n":
-                i += 1
-            continue
-        if text.startswith("/*", i):
-            end = text.find("*/", i + 2)
-            if end < 0:
-                raise DescriptorError("unterminated /* comment starting at line {}".format(line))
-            line += text.count("\n", i, end)
-            i = end + 2
-            continue
-        if c == "#":
-            raise DescriptorError("`#` comment at line {} is not valid in a descriptor".format(line))
-        out.append(c)
-        i += 1
-    return "".join(out)
-
-
-def _reject_duplicates(pairs):
-    seen = {}
-    for key, value in pairs:
-        if key in seen:
-            raise DescriptorError("duplicate key {!r}".format(key))
-        seen[key] = value
-    return seen
-
-
-def parse_descriptor(path):
-    text = path.read_text(encoding="utf-8")
-    clean = strip_comments(text)
-    # tolerate a trailing comma before ] or } (DSS does), which json.loads would reject
-    clean = re.sub(r",(\s*[\]}])", r"\1", clean)
-    try:
-        return json.loads(clean, object_pairs_hook=_reject_duplicates)
-    except json.JSONDecodeError as e:
-        raise DescriptorError("invalid JSON: {}".format(e))
+parse_descriptor = load_descriptor  # kept for callers of the old name
 
 
 def check_params(params, parameter_sets, where, errors):
@@ -132,6 +72,24 @@ def check_python_setup(data, where, errors):
         errors.append("{}: must define `do(payload, config, plugin_config, inputs)`".format(script.relative_to(ROOT)))
 
 
+def check_runnable_source(source, rel, errors):
+    """The runnable.py conventions DSS and the feature registry rely on."""
+    if not re.search(r"^class MyRunnable\(base\.HandsOnRunnable\):", source, re.M):
+        errors.append("{}: runnable.py must define `class MyRunnable(base.HandsOnRunnable):`".format(rel))
+    if re.search(r"^from managehandsonenv\.base import", source, re.M):
+        errors.append("{}: runnable.py must `from managehandsonenv import base`, not import names from it "
+                      "(DSS: \"Multiple classes inheriting Runnable\")".format(rel))
+    match = re.search(r"^\s+feature_id\s*=\s*[\"'](\w+)[\"']", source, re.M)
+    if not match:
+        errors.append("{}: runnable.py must set `feature_id = \"...\"` on MyRunnable".format(rel))
+    elif match.group(1) not in FEATURES:
+        errors.append("{}: feature_id {!r} is not registered in managehandsonenv.features (known: {})".format(
+            rel, match.group(1), list(FEATURES)))
+    elif FEATURES[match.group(1)].macro_folder != rel.name:
+        errors.append("{}: feature {!r} is registered for macro folder {!r}".format(
+            rel, match.group(1), FEATURES[match.group(1)].macro_folder))
+
+
 def main():
     errors = []
     checked = 0
@@ -139,7 +97,7 @@ def main():
     def load(path):
         nonlocal checked
         try:
-            data = parse_descriptor(path)
+            data = load_descriptor(path)
             checked += 1
             return data
         except DescriptorError as e:
@@ -157,8 +115,10 @@ def main():
         if not re.match(r"^\d+\.\d+\.\d+$", str(plugin.get("version", ""))):
             errors.append("plugin.json: version {!r} is not semantic".format(plugin.get("version")))
 
+    macro_folders = set()
     for folder in sorted(p for p in (ROOT / "python-runnables").iterdir() if p.is_dir()):
         rel = folder.relative_to(ROOT)
+        macro_folders.add(folder.name)
         descriptor = folder / "runnable.json"
         code = folder / "runnable.py"
         if not descriptor.exists():
@@ -167,12 +127,7 @@ def main():
         if not code.exists():
             errors.append("{}: runnable.py is missing".format(rel))
             continue
-        source = code.read_text(encoding="utf-8")
-        if not re.search(r"^class MyRunnable\(base\.HandsOnRunnable\):", source, re.M):
-            errors.append("{}: runnable.py must define `class MyRunnable(base.HandsOnRunnable):`".format(rel))
-        if re.search(r"^from managehandsonenv\.base import", source, re.M):
-            errors.append("{}: runnable.py must `from managehandsonenv import base`, not import names from it "
-                          "(DSS: \"Multiple classes inheriting Runnable\")".format(rel))
+        check_runnable_source(code.read_text(encoding="utf-8"), rel, errors)
 
         data = load(descriptor)
         if data is None:
@@ -192,11 +147,35 @@ def main():
                     errors.append("{}: {!r} must set getChoicesFromPython: true".format(rel, starter_param))
             check_python_setup(data, str(rel), errors)
 
+    for feature in FEATURES.values():
+        if feature.macro_folder not in macro_folders:
+            errors.append("feature {!r} points at missing macro folder {!r}".format(feature.id, feature.macro_folder))
+
+    webapps_dir = ROOT / "webapps"
+    if webapps_dir.is_dir():
+        for folder in sorted(p for p in webapps_dir.iterdir() if p.is_dir()):
+            rel = folder.relative_to(ROOT)
+            descriptor = folder / "webapp.json"
+            if not descriptor.exists():
+                errors.append("{}: webapp.json is missing".format(rel))
+                continue
+            data = load(descriptor)
+            if data is None:
+                continue
+            check_params(data.get("params", []), parameter_sets, str(rel), errors)
+            for name in WEBAPP_FILES:
+                if not (folder / name).is_file():
+                    errors.append("{}: {} is missing".format(rel, name))
+            if str(data.get("hasBackend", "")).lower() != "true":
+                errors.append("{}: webapp.json must set \"hasBackend\": \"true\" (backend.py serves the API)".format(rel))
+
     for error in errors:
         print("ERROR: {}".format(error))
     print("{} descriptor(s) checked, {} error(s)".format(checked, len(errors)))
     return 1 if errors else 0
 
+
+__all__ = ["DescriptorError", "strip_comments", "parse_descriptor", "main"]
 
 if __name__ == "__main__":
     sys.exit(main())

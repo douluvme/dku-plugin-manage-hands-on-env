@@ -14,7 +14,10 @@
     //                       single starter-project list, delete strategies with identical dry-run/real-run
     //                       reports, unit tests and `make check`; fixed the API-node-status NameError,
     //                       duplicate "params" keys and the aws-credentials preset id.
-    "version": "1.1.0",
+    // v1.2.0 release note : "Hands-on Workshop Console" plugin webapp: every macro feature from one page with
+    //                       live progress, log and job history; macro logic extracted into
+    //                       managehandsonenv.features and shared by the macros and the webapp.
+    "version": "1.2.0",
 
     // Meta data for display purposes:
     "meta": {
