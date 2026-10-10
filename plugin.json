@@ -32,13 +32,76 @@
 
         "licenseInfo": "Apache Software License"
     },
+    /* Plugin settings (arrive in plugin_config). Every value has a default matching the
+       historical hard-coded value, so an unsaved settings page keeps the old behaviour. */
     "params": [
-    {
-        "type": "PRESET",
-        "name": "aws_account",
-        "label": "AWS Account",
-        "parameterSetId": "aws-credentials",
-        "mandatory": true
-    }
+        {
+            "type": "PRESET",
+            "name": "aws_account",
+            "label": "AWS Account",
+            "parameterSetId": "aws-credentials",
+            "mandatory": true
+        },
+        {
+            "type": "STRING",
+            "name": "admin_project_key",
+            "label": "Admin project key",
+            "description": "The only project the macros may be run from",
+            "defaultValue": "ADMINV4",
+            "mandatory": false
+        },
+        {
+            "type": "STRING",
+            "name": "sandbox_folder",
+            "label": "Sandbox project folder",
+            "description": "Project folder holding the userNN folders",
+            "defaultValue": "SANDBOX",
+            "mandatory": false
+        },
+        {
+            "type": "STRING",
+            "name": "aws_region",
+            "label": "AWS region",
+            "defaultValue": "ap-northeast-2",
+            "mandatory": false
+        },
+        {
+            "type": "STRING",
+            "name": "rds_instance_id",
+            "label": "RDS DB instance identifier",
+            "defaultValue": "postgres-mag",
+            "mandatory": false
+        },
+        {
+            "type": "STRING",
+            "name": "api_node_instance_id",
+            "label": "API node EC2 instance id",
+            "defaultValue": "i-0e7ccb12c93ac1df2",
+            "mandatory": false
+        },
+        {
+            "type": "STRING",
+            "name": "readonly_project_key",
+            "label": "Read-only project key",
+            "description": "Project exposing the shared dataset (stop-sharing macro)",
+            "defaultValue": "READONLY",
+            "mandatory": false
+        },
+        {
+            "type": "STRING",
+            "name": "shared_dataset_name",
+            "label": "Shared dataset name",
+            "description": "Dataset of the read-only project whose sharing rules are cleaned",
+            "defaultValue": "credit_score",
+            "mandatory": false
+        },
+        {
+            "type": "STRING",
+            "name": "protected_bundle_prefix",
+            "label": "Protected deployment/bundle prefix",
+            "description": "Project deployments and bundles whose id starts with this prefix are never deleted",
+            "defaultValue": "READONLY",
+            "mandatory": false
+        }
     ]
 }
