@@ -2,10 +2,24 @@
 {
     "meta": {
         "label": "4.Stop Sharing Datasets",
-        "description": "Stop sharing credit_score dataset to starter projects",
+        "description": "Stop sharing the read-only project's shared dataset (plugin settings) with the hands-on projects",
         "category" : "⚠️ Hands-on 2: Housekeeping",
         "icon": "fas fa-ban fa-1x"
     },
+
+    /* The read-only project and the shared dataset are taken from the plugin settings
+       (readonly_project_key, shared_dataset_name). */
+    "params": [
+        {
+            "type": "STRINGS",
+            "name": "target_projects_to_keep",
+            "label": "Target projects to keep sharing with",
+            "description": "Sharing rules whose target project key STARTS WITH one of these entries are kept; every other rule is removed. A bare key such as KO4EVAL therefore also keeps KO4EVAL_01, KO4EVAL_99, ...",
+            "defaultValue": ["KO4EVAL", "DEMO_KO_CARDFRAUD"],
+            "mandatory": false,
+            "allowDuplicates": false
+        }
+    ],
 
     /* whether the runnable's code is untrusted */
     "impersonate": false,
