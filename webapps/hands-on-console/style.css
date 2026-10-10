@@ -15,7 +15,7 @@
 /* the hidden attribute must win over the display values set below (panes, dots, fields) */
 .hoc [hidden] { display: none !important; }
 
-.hoc-muted { color: #777; }
+.hoc-muted { color: #666; }
 
 /* ---- sidebar ---------------------------------------------------------------- */
 .hoc-sidebar {
@@ -32,6 +32,8 @@
 }
 .hoc-sidebar.collapsed { flex-basis: 44px; width: 44px; }
 .hoc-sidebar.collapsed .hoc-menu, .hoc-sidebar.collapsed .hoc-sidebar-title { display: none; }
+.hoc-rail { display: none; }
+.hoc-sidebar.collapsed .hoc-rail { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0; }
 .hoc-sidebar.collapsed .hoc-sidebar-head { justify-content: center; padding: 12px 0; }
 .hoc-sidebar.collapsed .hoc-collapse { transform: rotate(180deg); }
 
@@ -41,7 +43,10 @@
   justify-content: space-between;
   padding: 14px 10px 10px 16px;
 }
-.hoc-sidebar-title { font-size: 15px; font-weight: 600; white-space: nowrap; }
+.hoc-sidebar-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hoc-sidebar-label { font-weight: 400; color: #666; }
+.hoc-sidebar-project { font-family: Menlo, Consolas, monospace; font-size: 12px; background: #dfe6f0; color: #3b4a5c; border-radius: 4px; padding: 1px 6px; }
+.hoc-sidebar-title:has(.hoc-sidebar-project:empty) { visibility: hidden; }   /* nothing to show until the backend answers */
 .hoc-collapse {
   border: 1px solid #c9d2dc;
   background: #fff;
@@ -100,7 +105,7 @@
 .hoc-item:focus-visible { outline: 2px solid #2c5aa0; outline-offset: -2px; }
 .hoc-item.active, .hoc-item[aria-current="true"] { background: #2c5aa0; color: #fff; }
 .hoc-item .hoc-item-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hoc-item .hoc-flag { color: #d19a00; font-size: 12px; }
+.hoc-item .hoc-flag { color: #b8860b; font-size: 12px; }
 .hoc-item.active .hoc-flag { color: #ffd966; }
 
 .hoc-dot {
@@ -137,7 +142,7 @@
 
 .hoc-title { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
 .hoc-title-main { font-size: 20px; font-weight: 600; }
-.hoc-title-sub { font-size: 13px; color: #777; }
+.hoc-title-sub { font-size: 13px; color: #666; }
 .hoc-hamburger { display: none; border: 1px solid #c9d2dc; background: #fff; border-radius: 4px; width: 32px; height: 30px; font-size: 16px; cursor: pointer; align-self: center; }
 .hoc-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); z-index: 9; }
 
@@ -198,7 +203,7 @@
 }
 .hoc-field textarea { min-height: 72px; font-family: Menlo, Consolas, monospace; }
 .hoc-field .hoc-input > input[type="checkbox"] { align-self: flex-start; margin: 9px 0 6px 2px; }
-.hoc-field .hoc-help { font-size: 12px; color: #777; }
+.hoc-field .hoc-help { font-size: 12px; color: #666; }
 .hoc-field .hoc-req { color: #c62828; margin-left: 3px; font-weight: 700; }
 .hoc-field .hoc-field-error { font-size: 12px; color: #b3261e; }
 .hoc-field.invalid input, .hoc-field.invalid select, .hoc-field.invalid textarea { border-color: #b3261e; }
@@ -273,7 +278,7 @@
 .hoc-history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .hoc-history li { display: flex; gap: 10px; align-items: center; font-size: 13px; cursor: pointer; padding: 4px 6px; border-radius: 4px; }
 .hoc-history li:hover { background: #f3f6f9; }
-.hoc-history .hoc-when { color: #777; font-variant-numeric: tabular-nums; min-width: 70px; }
+.hoc-history .hoc-when { color: #666; font-variant-numeric: tabular-nums; min-width: 70px; }
 
 /* ---- narrow screens: off-canvas menu, single-column form ----------------- */
 @media (max-width: 760px) {
@@ -344,3 +349,19 @@
 .hoc-confirm.danger .hoc-run-btn { background: #c62828; border-color: #c62828; }
 
 .hoc-history li.active { background: #e8edf3; }
+
+/* ---- polish: rail, banners, history columns ------------------------------------- */
+.hoc-rail-btn { width: 28px; height: 28px; border: 1px solid #c9d2dc; border-radius: 6px; background: #dfe6f0; color: #3b4a5c; font-size: 12px; font-weight: 700; cursor: pointer; }
+.hoc-rail-btn:hover { background: #2c5aa0; color: #fff; border-color: #2c5aa0; }
+.hoc-banner { display: flex; align-items: center; gap: 10px; }
+.hoc-banner-text { flex: 1; }
+.hoc-banner-close { border: 0; background: none; font-size: 18px; line-height: 1; cursor: pointer; color: inherit; opacity: 0.7; padding: 0 2px; }
+.hoc-banner-close:hover { opacity: 1; }
+.hoc-history .hoc-duration { color: #666; font-variant-numeric: tabular-nums; min-width: 48px; font-size: 12px; }
+.hoc-history-label { flex: 1; }
+.hoc-badge { font-size: 11px; font-weight: 600; color: #3b4a5c; background: #dfe6f0; border-radius: 9px; padding: 1px 7px; }
+.hoc-history .hoc-flag { color: #b8860b; font-size: 12px; }
+@media (max-width: 760px) {
+  .hoc-sidebar.collapsed .hoc-rail { display: none; }
+  .hoc-sidebar.collapsed .hoc-sidebar-title { display: inline; }
+}

@@ -50,10 +50,17 @@
     return node;
   }
 
-  function banner(message, isError) {
+  // banner(message, isError, {label, onclick}) — the optional action becomes a button (e.g. Retry)
+  function banner(message, isError, action) {
     var node = $("hoc-banner");
     if (!message) { node.hidden = true; return; }
-    node.textContent = message;
+    node.innerHTML = "";
+    node.appendChild(el("span", { class: "hoc-banner-text", text: message }));
+    if (action) {
+      node.appendChild(el("button", { type: "button", class: "hoc-tool-btn hoc-tool-sm", text: action.label, onclick: action.onclick }));
+    }
+    node.appendChild(el("button", { type: "button", class: "hoc-banner-close", "aria-label": "Dismiss", text: "×",
+                                    onclick: function () { node.hidden = true; } }));
     node.className = "hoc-banner" + (isError ? " hoc-banner-error" : "");
     node.hidden = false;
   }
@@ -61,7 +68,28 @@
   function formatTime(seconds) {
     if (!seconds) return "";
     var d = new Date(seconds * 1000);
-    return d.toTimeString().slice(0, 8);
+    var time = d.toTimeString().slice(0, 8);
+    var today = new Date();
+    var sameDay = d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+    return sameDay ? time : d.toISOString().slice(0, 10) + " " + time;
+  }
+
+  function formatDuration(job) {
+    var start = job.started_at || job.created_at;
+    if (!start) return "";
+    var end = job.finished_at || (job.active ? Date.now() / 1000 : null);
+    if (!end) return "";
+    var s = Math.max(0, Math.round(end - start));
+    if (s < 60) return s + "s";
+    if (s < 3600) return Math.floor(s / 60) + "m " + (s % 60) + "s";
+    return Math.floor(s / 3600) + "h " + Math.floor((s % 3600) / 60) + "m";
+  }
+
+  function paramsTooltip(params) {
+    return Object.keys(params || {}).map(function (k) {
+      var v = params[k];
+      return k + ": " + (Array.isArray(v) ? v.join(", ") : String(v));
+    }).join("\n");
   }
 
   // Per-viewer UI preferences (collapsed sidebar, closed sections). Best effort only.
@@ -135,6 +163,20 @@
         el("ul", { class: "hoc-items", role: "menu" }, items)
       ]);
       nav.appendChild(section);
+    });
+    // collapsed-sidebar rail: one initial per section, expands the menu and opens that section
+    var rail = $("hoc-rail");
+    rail.innerHTML = "";
+    context.categories.forEach(function (category) {
+      var name = category.menu_name || category.name;
+      rail.appendChild(el("button", {
+        type: "button", class: "hoc-rail-btn", title: name, "aria-label": name, text: name.charAt(0).toUpperCase(),
+        onclick: function () {
+          setSidebarCollapsed(false);
+          var section = document.querySelector('.hoc-section[data-section="' + category.name.replace(/"/g, '\\"') + '"]');
+          if (section && !section.classList.contains("open")) toggleSection(section, category.name);
+        }
+      }));
     });
   }
 
@@ -667,15 +709,20 @@
         list.appendChild(el("li", { class: "hoc-muted", text: "No job yet in this backend session." }));
       }
       body.jobs.forEach(function (job) {
+        var cells = [
+          el("span", { class: "hoc-when", text: formatTime(job.started_at || job.created_at) }),
+          el("span", { class: "hoc-duration", text: formatDuration(job) }),
+          el("span", { class: "hoc-status " + job.status, text: job.status }),
+          el("span", { class: "hoc-history-label", text: job.label })
+        ];
+        if (job.params && job.params.delete_TF === false) cells.push(el("span", { class: "hoc-badge", text: "dry run" }));
+        if (job.destructive) cells.push(el("span", { class: "hoc-flag", text: "⚠", title: "changed the instance" }));
         list.appendChild(el("li", {
           "data-job": job.id,
           class: state.job && state.job.id === job.id ? "active" : "",
+          title: paramsTooltip(job.params),
           onclick: function () { openJob(job); }
-        }, [
-          el("span", { class: "hoc-when", text: formatTime(job.started_at || job.created_at) }),
-          el("span", { class: "hoc-status " + job.status, text: job.status }),
-          el("span", { text: job.label + (job.destructive ? " ⚠" : "") })
-        ]));
+        }, cells));
       });
       state.historyCount = body.jobs.length;
       $("hoc-history-count").textContent = body.jobs.length ? String(body.jobs.length) : "";
@@ -710,10 +757,15 @@
       tab.addEventListener("click", function () { showTab(tab.getAttribute("data-tab")); });
     });
     if (loadPrefs().sidebarCollapsed) setSidebarCollapsed(true);
+    loadContext();
+  }
 
+  function loadContext() {
+    banner("");
     api("/api/context").then(function (context) {
       state.context = context;
       $("hoc-project").textContent = "project " + context.project_key;
+      $("hoc-sidebar-project").textContent = context.project_key;
       renderMenu(context);
       if (!context.allowed) {
         banner("This console only runs inside project " + context.admin_project_key +
@@ -722,7 +774,8 @@
       updateRunButton();
       refreshHistory();
     }).catch(function (err) {
-      banner("Backend not reachable: " + err.message + ". Start the webapp backend and reload.", true);
+      banner("Backend not reachable: " + err.message + ". Start the webapp backend, then retry.", true,
+             { label: "Retry", onclick: loadContext });
     });
   }
 

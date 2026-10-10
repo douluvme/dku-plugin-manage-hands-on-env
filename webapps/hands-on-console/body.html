@@ -1,10 +1,12 @@
 <div id="hoc" class="hoc">
   <aside id="hoc-sidebar" class="hoc-sidebar">
     <div class="hoc-sidebar-head">
-      <span class="hoc-sidebar-title">Hands-on Console</span>
+      <span class="hoc-sidebar-title"><span class="hoc-sidebar-label">project</span> <span id="hoc-sidebar-project" class="hoc-sidebar-project"></span></span>
       <button id="hoc-collapse" type="button" class="hoc-collapse" title="Collapse menu" aria-label="Collapse menu">&#x276E;</button>
     </div>
     <nav id="hoc-menu" class="hoc-menu" aria-label="Features"></nav>
+    <!-- shown instead of the menu while the sidebar is collapsed: one initial per section -->
+    <nav id="hoc-rail" class="hoc-rail" aria-label="Sections"></nav>
   </aside>
 
   <div id="hoc-backdrop" class="hoc-backdrop" hidden></div>
