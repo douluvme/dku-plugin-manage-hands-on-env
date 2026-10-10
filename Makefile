@@ -1,5 +1,5 @@
 PYTHON ?= python3
-PATHS = python-lib python-runnables tests scripts
+PATHS = python-lib python-runnables resource tests scripts
 
 .PHONY: check compile lint descriptors test
 

@@ -1,16 +1,10 @@
 """Load every macro the way DSS does (by file) and exercise the ones that need no AWS."""
 import pytest
-from conftest import load_runnable, runnable_dirs
+from conftest import ROOT, load_runnable, runnable_dirs
 from fakes import FakeClient
 
 from managehandsonenv.base import HandsOnRunnable, Settings
 from managehandsonenv.starters import STARTERS
-
-STARTER_MACROS = {
-    "1-1-duplicate-starter-projects",
-    "1-2-change-owner-starter-projects",
-    "2-1-delete-starter-projects",
-}
 
 
 def folder_named(name):
@@ -22,10 +16,19 @@ def test_every_runnable_defines_myrunnable(folder):
     module = load_runnable(folder)
     assert issubclass(module.MyRunnable, HandsOnRunnable)
     assert module.MyRunnable.execute is not HandsOnRunnable.execute, "execute() must be overridden"
-    if folder.name in STARTER_MACROS:
-        assert module.do({"parameterName": "x"}, {}, {}, {}) == {"choices": STARTERS}
-    else:
-        assert not hasattr(module, "do")
+    assert not hasattr(module, "do"), "dynamic choices live in resource/starter_choices.py, not runnable.py"
+
+
+def test_starter_choices_setup_script():
+    """DSS calls do() in the resource/ script named by paramsPythonSetup."""
+    import importlib.util
+
+    script = ROOT / "resource" / "starter_choices.py"
+    spec = importlib.util.spec_from_file_location("starter_choices_setup", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for param in ("project_keys_list", "project_key_select"):
+        assert module.do({"parameterName": param}, {}, {}, {}) == {"choices": STARTERS}
 
 
 def test_runnable_dirs_are_the_expected_eleven():

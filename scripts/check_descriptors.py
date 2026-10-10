@@ -10,8 +10,9 @@ python-runnables/*/runnable.json:
 - parameter names are unique and PRESET params reference an existing
   parameter set
 - every macro folder has a runnable.py defining `class MyRunnable(`
-- the starter-project parameters use getChoicesFromPython (no selectChoices)
-  and their runnable.py defines `do(`
+- the starter-project parameters use getChoicesFromPython (no selectChoices),
+  their descriptor names a paramsPythonSetup script, and that script exists
+  under resource/ and defines `do(`
 
 Exit status is 1 when anything is wrong.
 """
@@ -113,6 +114,21 @@ def check_params(params, parameter_sets, where, errors):
                     where, param.get("name"), set_id, sorted(parameter_sets)))
 
 
+def check_python_setup(data, where, errors):
+    """A component using getChoicesFromPython must name a resource/ script that defines do()."""
+    setup = data.get("paramsPythonSetup")
+    if not setup:
+        errors.append("{}: uses getChoicesFromPython but declares no paramsPythonSetup "
+                      "(DSS: \"doesn't declare python setup code\")".format(where))
+        return
+    script = ROOT / "resource" / setup
+    if not script.is_file():
+        errors.append("{}: paramsPythonSetup {!r} not found at {}".format(where, setup, script.relative_to(ROOT)))
+        return
+    if not re.search(r"^def do\(", script.read_text(encoding="utf-8"), re.M):
+        errors.append("{}: must define `do(payload, config, plugin_config, inputs)`".format(script.relative_to(ROOT)))
+
+
 def main():
     errors = []
     checked = 0
@@ -168,8 +184,7 @@ def main():
                     errors.append("{}: {!r} must not hard-code selectChoices (use starters.py)".format(rel, starter_param))
                 if param.get("getChoicesFromPython") is not True:
                     errors.append("{}: {!r} must set getChoicesFromPython: true".format(rel, starter_param))
-            if not re.search(r"^def do\(", source, re.M):
-                errors.append("{}: runnable.py must define `do(payload, config, plugin_config, inputs)`".format(rel))
+            check_python_setup(data, str(rel), errors)
 
     for error in errors:
         print("ERROR: {}".format(error))

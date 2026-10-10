@@ -1,13 +1,7 @@
 # Change the owner of one starter project's copies (KEY_99, KEY_NN ...) to each user, or back to admin.
 from managehandsonenv.base import HandsOnRunnable
 from managehandsonenv.projects import set_project_owner, suffixed_key
-from managehandsonenv.starters import starter_choices
 from managehandsonenv.users import iter_user_nums_range, user_id
-
-
-def do(payload, config, plugin_config, inputs):
-    """Dynamic choices for the ``project_key_select`` parameter (getChoicesFromPython)."""
-    return starter_choices(payload, config, plugin_config, inputs)
 
 
 class MyRunnable(HandsOnRunnable):

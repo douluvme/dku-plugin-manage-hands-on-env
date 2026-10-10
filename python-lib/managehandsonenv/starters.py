@@ -1,7 +1,9 @@
 """The standard starter projects offered by the duplicate / change-owner / delete macros.
 
-This is the single source of the list: the three descriptors use
-``"getChoicesFromPython": true`` and their ``do()`` function returns ``STARTERS``.
+This is the single source of the list: the three descriptors declare
+``"paramsPythonSetup": "starter_choices.py"`` and mark their starter parameter
+``"getChoicesFromPython": true``; ``resource/starter_choices.py`` then serves
+``STARTERS`` through :func:`starter_choices`.
 """
 from typing import Dict, List
 

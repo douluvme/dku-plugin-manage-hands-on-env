@@ -11,6 +11,9 @@
     /* whether the runnable's code is untrusted */
     "impersonate": false,
 
+    /* resource/starter_choices.py defines do(), which fills every getChoicesFromPython param below */
+    "paramsPythonSetup": "starter_choices.py",
+
     "params": [
         {
             "name": "user_count",
@@ -31,10 +34,8 @@
             "defaultValue": "from_list",
             "mandatory": true
         },
-        /* The choices come from managehandsonenv.starters.STARTERS through the do() function in
-           runnable.py (DSS dynamic select). Dynamic choices for macro parameters require a DSS
-           version that honours getChoicesFromPython for python runnables; verify on the target
-           instance after upgrading the plugin. */
+        /* The choices come from managehandsonenv.starters.STARTERS via the do() function in
+           resource/starter_choices.py (see paramsPythonSetup above). */
         {
             "name": "project_keys_list",
             "label": "Project keys to duplicate",

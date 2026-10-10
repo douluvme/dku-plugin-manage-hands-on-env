@@ -5,13 +5,7 @@ from collections import OrderedDict
 from managehandsonenv.base import HandsOnRunnable
 from managehandsonenv.projects import duplicate_project, existing_project_keys, suffixed_key
 from managehandsonenv.results import grouped_lines, html_key, render_result
-from managehandsonenv.starters import starter_choices
 from managehandsonenv.users import get_user_folder, iter_user_nums, user_id
-
-
-def do(payload, config, plugin_config, inputs):
-    """Dynamic choices for the ``project_keys_list`` parameter (getChoicesFromPython)."""
-    return starter_choices(payload, config, plugin_config, inputs)
 
 
 class MyRunnable(HandsOnRunnable):
