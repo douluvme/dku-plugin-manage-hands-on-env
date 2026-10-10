@@ -1,0 +1,19 @@
+/* Plugin webapp: one page to run every hands-on feature (the same ones the macros offer). */
+{
+    "meta": {
+        "label": "Hands-on Workshop Console",
+        "description": "Run the hands-on setup, housekeeping and workshop-environment features from one page, with live progress and a job history. Create it inside the admin project.",
+        "icon": "fas fa-hammer"
+    },
+
+    /* a standard (HTML/JS) webapp with a Python (Flask) backend: backend.py, body.html, app.js, style.css */
+    "baseType": "STANDARD",
+    "hasBackend": "true",
+    "noJSSecurity": "true",
+    "standardWebAppLibraries": ["jquery", "bootstrap", "dataiku"],
+
+    /* no per-instance settings: everything comes from the plugin settings (plugin.json params) */
+    "params": [],
+
+    "roles": []
+}

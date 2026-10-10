@@ -1,0 +1,140 @@
+.hoc {
+  font-family: "Source Sans Pro", "Helvetica Neue", Arial, sans-serif;
+  color: #222;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+.hoc h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.hoc-muted { color: #777; }
+
+/* ---- header / button bar ------------------------------------------------- */
+.hoc-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  padding: 12px 0 8px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.hoc-title { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.hoc-title-main { font-size: 20px; font-weight: 600; }
+.hoc-title-sub { font-size: 13px; color: #777; }
+
+.hoc-banner {
+  margin: 6px 0 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  color: #664d03;
+  font-size: 13px;
+}
+.hoc-banner.hoc-banner-error { background: #f8d7da; border-color: #f1aeb5; color: #58151c; }
+
+.hoc-buttons { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+
+.hoc-group { display: flex; flex-direction: column; gap: 6px; }
+.hoc-group-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #777;
+}
+.hoc-group-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.hoc-feature-btn {
+  border: 1px solid #c9d2dc;
+  border-left-width: 4px;
+  background: #f8fafc;
+  color: #222;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.hoc-feature-btn:hover { background: #eef3f8; }
+.hoc-feature-btn.active { background: #2c5aa0; border-color: #2c5aa0; color: #fff; }
+.hoc-group-0 .hoc-feature-btn { border-left-color: #2e7d32; }
+.hoc-group-1 .hoc-feature-btn { border-left-color: #c62828; }
+.hoc-group-2 .hoc-feature-btn { border-left-color: #ef6c00; }
+.hoc-feature-btn.destructive::after { content: " \26A0"; font-size: 11px; }
+
+/* ---- panels ---------------------------------------------------------------- */
+.hoc-main { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+
+.hoc-panel {
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 14px 16px;
+  background: #fff;
+}
+
+/* ---- form ------------------------------------------------------------------ */
+.hoc-form { display: grid; grid-template-columns: 220px 1fr; gap: 10px 16px; align-items: start; }
+.hoc-field { display: contents; }
+.hoc-field[hidden] { display: none; }
+.hoc-field label { font-weight: 600; font-size: 13px; padding-top: 6px; }
+.hoc-field .hoc-input { display: flex; flex-direction: column; gap: 4px; }
+.hoc-field input[type="text"], .hoc-field input[type="number"], .hoc-field input[type="password"],
+.hoc-field select, .hoc-field textarea {
+  width: 100%;
+  max-width: 480px;
+  padding: 5px 8px;
+  border: 1px solid #c9d2dc;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.hoc-field textarea { min-height: 72px; font-family: Menlo, Consolas, monospace; }
+.hoc-field .hoc-help { font-size: 12px; color: #777; }
+.hoc-checklist { display: flex; flex-direction: column; gap: 3px; }
+.hoc-checklist label { font-weight: normal; padding: 0; font-size: 13px; }
+.hoc-checklist input { margin-right: 6px; }
+
+.hoc-actions { margin-top: 14px; display: flex; align-items: center; gap: 12px; }
+.hoc-actions .btn-primary { background: #2c5aa0; border-color: #2c5aa0; }
+.hoc-actions .btn-primary[disabled] { opacity: 0.5; }
+
+/* ---- job ------------------------------------------------------------------- */
+.hoc-job-head { display: flex; align-items: center; justify-content: space-between; }
+.hoc-status { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #e0e0e0; }
+.hoc-status.running { background: #cfe2ff; color: #084298; }
+.hoc-status.succeeded { background: #d1e7dd; color: #0a3622; }
+.hoc-status.failed { background: #f8d7da; color: #58151c; }
+
+.hoc-progress { position: relative; height: 18px; background: #eee; border-radius: 9px; margin: 8px 0 12px; overflow: hidden; }
+.hoc-progress-bar { height: 100%; width: 0; background: #2c5aa0; transition: width 0.4s; }
+.hoc-progress-bar.indeterminate { width: 30%; animation: hoc-slide 1.2s linear infinite; }
+.hoc-progress-text { position: absolute; inset: 0; text-align: center; font-size: 11px; line-height: 18px; color: #222; }
+@keyframes hoc-slide { from { margin-left: -30%; } to { margin-left: 100%; } }
+
+.hoc-log summary { cursor: pointer; font-size: 13px; color: #555; }
+.hoc-log pre {
+  margin: 6px 0 0;
+  max-height: 260px;
+  overflow: auto;
+  background: #1e1e1e;
+  color: #ddd;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+
+.hoc-error { margin-top: 10px; white-space: pre-wrap; font-family: Menlo, Consolas, monospace; font-size: 12px; color: #58151c; background: #f8d7da; padding: 8px 10px; border-radius: 4px; }
+.hoc-result { margin-top: 12px; font-size: 13px; }
+.hoc-result h4 { font-size: 14px; margin: 10px 0 4px; }
+
+/* ---- history --------------------------------------------------------------- */
+.hoc-history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.hoc-history li { display: flex; gap: 10px; align-items: center; font-size: 13px; cursor: pointer; padding: 4px 6px; border-radius: 4px; }
+.hoc-history li:hover { background: #f3f6f9; }
+.hoc-history .hoc-when { color: #777; font-variant-numeric: tabular-nums; min-width: 70px; }
