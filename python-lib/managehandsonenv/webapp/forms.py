@@ -3,10 +3,15 @@
 The webapp renders the same parameters DSS shows for the macro, so there is one
 definition of each feature's options. PRESET parameters (the AWS account) are
 not shown: the backend takes them from the plugin settings.
+
+The descriptors are read from the generated snapshot
+``managehandsonenv.features.descriptor_data`` rather than from the files: DSS
+runs a plugin webapp backend from a copy of the plugin that holds python-lib/
+but not python-runnables/.
 """
 from typing import Any, Dict, List
 
-from managehandsonenv.descriptors import macro_descriptor
+from managehandsonenv.features.descriptor_data import MACRO_DESCRIPTORS
 from managehandsonenv.features.types import Feature
 from managehandsonenv.starters import STARTERS
 
@@ -34,7 +39,10 @@ def param_schema(param: Dict[str, Any]) -> Dict[str, Any]:
 def form_schema(feature: Feature, descriptor: Dict[str, Any] = None) -> Dict[str, Any]:
     """``{"feature_id", "label", "description", "destructive", "confirm", "params": [...]}``."""
     if descriptor is None:
-        descriptor = macro_descriptor(feature.macro_folder)
+        try:
+            descriptor = MACRO_DESCRIPTORS[feature.macro_folder]
+        except KeyError:
+            raise KeyError("No descriptor snapshot for macro folder {!r}: run `make sync`".format(feature.macro_folder))
     params: List[Dict[str, Any]] = [
         param_schema(param)
         for param in descriptor.get("params", [])

@@ -17,9 +17,11 @@ and webapps/*/webapp.json:
   their descriptor names a paramsPythonSetup script, and that script exists
   under resource/ and defines `do(`
 - every webapp folder has backend.py, body.html, app.js and style.css
+- the descriptor snapshot the webapp reads (features/descriptor_data.py) is up to date
 
 Exit status is 1 when anything is wrong.
 """
+import importlib.util
 import pathlib
 import re
 import sys
@@ -29,6 +31,13 @@ sys.path.insert(0, str(ROOT / "python-lib"))
 
 from managehandsonenv.descriptors import DescriptorError, load_descriptor, strip_comments  # noqa: E402
 from managehandsonenv.features import FEATURES  # noqa: E402
+
+
+def _load_sync_script():
+    spec = importlib.util.spec_from_file_location("sync_feature_params", ROOT / "scripts" / "sync_feature_params.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 # macro folder -> parameter that must take its choices from python (starters.py)
 STARTER_PARAMS = {
@@ -168,6 +177,11 @@ def main():
                     errors.append("{}: {} is missing".format(rel, name))
             if str(data.get("hasBackend", "")).lower() != "true":
                 errors.append("{}: webapp.json must set \"hasBackend\": \"true\" (backend.py serves the API)".format(rel))
+
+    sync = _load_sync_script()
+    if not sync.TARGET.exists() or sync.TARGET.read_text(encoding="utf-8") != sync.render(sync.collect()):
+        errors.append("{}: descriptor snapshot is stale or missing; run `make sync`".format(
+            sync.TARGET.relative_to(ROOT)))
 
     for error in errors:
         print("ERROR: {}".format(error))

@@ -1,9 +1,30 @@
 """Form schemas derived from the macro descriptors."""
 import pytest
+from conftest import ROOT
 
+from managehandsonenv.descriptors import macro_descriptor
 from managehandsonenv.features import FEATURES, get_feature
+from managehandsonenv.features.descriptor_data import MACRO_DESCRIPTORS
 from managehandsonenv.starters import STARTERS
 from managehandsonenv.webapp.forms import coerce_params, form_schema, param_schema
+
+
+def test_descriptor_snapshot_matches_the_files():
+    """The webapp reads a generated snapshot (DSS copies python-lib only); it must not drift."""
+    folders = sorted(p.name for p in (ROOT / "python-runnables").iterdir() if (p / "runnable.json").exists())
+    assert sorted(MACRO_DESCRIPTORS) == folders
+    for folder in folders:
+        data = macro_descriptor(folder)
+        assert MACRO_DESCRIPTORS[folder] == {"meta": data["meta"], "params": data["params"]}, (
+            "{}: snapshot is stale, run `make sync`".format(folder))
+
+
+def test_form_schema_does_not_touch_the_filesystem(monkeypatch):
+    import managehandsonenv.descriptors as descriptors
+
+    monkeypatch.setattr(descriptors, "plugin_root", lambda: ROOT / "does-not-exist")
+    for feature in FEATURES.values():
+        assert form_schema(feature)["params"] is not None
 
 
 @pytest.mark.parametrize("feature_id", list(FEATURES))
