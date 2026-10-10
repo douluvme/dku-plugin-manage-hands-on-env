@@ -8,6 +8,11 @@ def html_key(key: str) -> str:
     return "&lt;{}&gt;".format(html.escape(str(key)))
 
 
+def folder_marker(name: str) -> str:
+    """Render a deleted/identified folder as ``<i>[+name]</i>``."""
+    return "<i>[+{}]</i>".format(html.escape(str(name)))
+
+
 def heading(text: str) -> str:
     return "<h4>{}</h4>".format(text)
 
