@@ -43,8 +43,11 @@
           <span id="hoc-job-status" class="hoc-status"></span>
         </div>
         <div class="hoc-progress">
-          <div id="hoc-progress-bar" class="hoc-progress-bar"></div>
           <span id="hoc-progress-text" class="hoc-progress-text"></span>
+          <div id="hoc-progress-bar" class="hoc-progress-bar">
+            <!-- same text in white, clipped by the fill: digits turn white where the fill covers them -->
+            <span id="hoc-progress-text-light" class="hoc-progress-text light" aria-hidden="true"></span>
+          </div>
         </div>
         <details class="hoc-log" open>
           <summary>Log</summary>

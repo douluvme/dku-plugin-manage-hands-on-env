@@ -370,20 +370,23 @@
     status.className = "hoc-status " + job.status;
 
     var bar = $("hoc-progress-bar");
-    var text = $("hoc-progress-text");
+    var label;
     if (job.progress_target) {
       var pct = Math.min(100, Math.round(100 * job.progress / job.progress_target));
       bar.className = "hoc-progress-bar";
-      bar.style.width = pct + "%";
-      text.textContent = job.progress + " / " + job.progress_target;
+      bar.style.setProperty("--pct", String(pct));
+      label = job.progress + " / " + job.progress_target;
     } else if (job.active) {
       bar.className = "hoc-progress-bar indeterminate";
-      text.textContent = "running";
+      label = "running";
     } else {
       bar.className = "hoc-progress-bar";
-      bar.style.width = "100%";
-      text.textContent = job.status;
+      bar.style.setProperty("--pct", "100");
+      label = job.status;
     }
+    // dark copy over the track, white copy clipped to the fill (see style.css)
+    $("hoc-progress-text").textContent = label;
+    $("hoc-progress-text-light").textContent = label;
 
     if (job.log && job.log.length) {
       var pre = $("hoc-log");

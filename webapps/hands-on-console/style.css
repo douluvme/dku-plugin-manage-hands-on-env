@@ -192,11 +192,11 @@
   font-family: inherit;
 }
 .hoc-field textarea { min-height: 72px; font-family: Menlo, Consolas, monospace; }
-.hoc-field .hoc-input > input[type="checkbox"] { align-self: flex-start; margin: 9px 0 0 2px; }
+.hoc-field .hoc-input > input[type="checkbox"] { align-self: flex-start; margin: 9px 0 6px 2px; }
 .hoc-field .hoc-help { font-size: 12px; color: #777; }
-.hoc-checklist { display: flex; flex-direction: column; gap: 3px; }
-.hoc-checklist label { font-weight: normal; padding: 0; font-size: 13px; }
-.hoc-checklist input { margin-right: 6px; }
+.hoc-checklist { display: flex; flex-direction: column; gap: 2px; }
+.hoc-checklist label { display: flex; align-items: center; font-weight: normal; padding: 3px 0; font-size: 13px; cursor: pointer; }
+.hoc-checklist input { margin: 0 10px 0 2px; }
 
 .hoc-actions { margin-top: 14px; display: flex; align-items: center; gap: 12px; }
 .hoc-run-btn {
@@ -220,9 +220,28 @@
 .hoc-status.failed { background: #f8d7da; color: #58151c; }
 
 .hoc-progress { position: relative; height: 18px; background: #eee; border-radius: 9px; margin: 8px 0 12px; overflow: hidden; }
-.hoc-progress-bar { height: 100%; width: 0; background: #2c5aa0; transition: width 0.4s; }
+.hoc-progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--pct, 0) * 1%);
+  background: #2c5aa0;
+  overflow: hidden;              /* clips the white copy of the text to the filled part */
+  transition: width 0.4s;
+}
 .hoc-progress-bar.indeterminate { width: 30%; animation: hoc-slide 1.2s linear infinite; }
-.hoc-progress-text { position: absolute; inset: 0; text-align: center; font-size: 11px; line-height: 18px; color: #222; }
+.hoc-progress-text {
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  color: #222;
+  font-variant-numeric: tabular-nums;
+}
+/* the white copy spans the whole track (fill width / pct), so it lines up with the dark one */
+.hoc-progress-text.light { color: #fff; width: calc(100% * 100 / max(var(--pct, 0), 1)); }
+.hoc-progress-bar.indeterminate .hoc-progress-text.light { display: none; }
 @keyframes hoc-slide { from { margin-left: -30%; } to { margin-left: 100%; } }
 
 .hoc-log summary { cursor: pointer; font-size: 13px; color: #555; }
