@@ -43,6 +43,8 @@ class HandsOnRunnable(Runnable):
             settings=self.settings,
             plugin_config=self.plugin_config,
             project_key=self.project_key,
+            component_config=self.config,
+            component_label="macro parameters",
         )
 
     @property
@@ -72,4 +74,4 @@ class HandsOnRunnable(Runnable):
 
     def aws_preset(self) -> Dict[str, Any]:
         """The ``aws_account`` preset: plugin-level first, then the macro's own parameter."""
-        return self.context.aws_preset(self.config)
+        return self.context.aws_preset()

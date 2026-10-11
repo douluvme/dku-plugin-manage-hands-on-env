@@ -65,6 +65,17 @@ def test_form_schema_carries_settings_and_label_overrides():
     assert form_schema(get_feature("delete_projects"))["settings"] == []  # no settings given
 
 
+def test_aws_features_get_a_credentials_chip():
+    from managehandsonenv.settings import Settings
+
+    missing = form_schema(get_feature("db_status"), settings=Settings())["settings"][-1]
+    assert missing["key"] == "aws_account" and missing["value"] == "not set" and missing["missing"]
+    assert "webapp settings" in missing["hint"]
+    found = form_schema(get_feature("api_node_power"), settings=Settings(), aws_source="webapp settings")["settings"][-1]
+    assert found == {"key": "aws_account", "label": "AWS account", "value": "webapp settings"}
+    assert all(chip["key"] != "aws_account" for chip in form_schema(get_feature("delete_projects"), settings=Settings())["settings"])
+
+
 def test_param_schema_falls_back_to_string_for_unknown_types():
     schema = param_schema({"name": "ds", "type": "DATASET", "label": "Dataset"})
     assert schema["type"] == "STRING" and schema["unsupportedType"] == "DATASET"

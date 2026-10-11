@@ -1,13 +1,24 @@
 """boto3 helpers for the workshop infrastructure features."""
 from typing import Any, Dict, Optional, Tuple
 
+NO_CREDENTIALS_MESSAGE = (
+    "No AWS credentials: select an AWS Account in the webapp settings (Settings tab) "
+    "or in the plugin settings; macros use their own AWS Account parameter"
+)
+
 
 def boto_client(service: str, preset: Dict[str, Any], region: str):
     """A boto3 client for ``service`` authenticated with the ``aws-credentials`` preset.
 
+    Raises ``RuntimeError`` when the preset carries no key pair rather than letting
+    boto3 fall back to the instance role, whose permissions are not the plugin's.
+
     ``boto3`` is imported here, not at module level, so that the library (and the
     macros that never touch AWS) can be imported where it is not installed.
     """
+    preset = preset or {}
+    if not (preset.get("aws_access_key_id") and preset.get("aws_secret_access_key")):
+        raise RuntimeError(NO_CREDENTIALS_MESSAGE)
     try:
         import boto3
     except ImportError:

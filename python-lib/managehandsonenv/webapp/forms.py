@@ -2,7 +2,8 @@
 
 The webapp renders the same parameters DSS shows for the macro, so there is one
 definition of each feature's options. PRESET parameters (the AWS account) are
-not shown: the backend takes them from the plugin settings.
+not shown: the backend takes them from the webapp or plugin settings, and the
+form only says where they come from.
 
 The descriptors are read from the generated snapshot
 ``managehandsonenv.features.descriptor_data`` rather than from the files: DSS
@@ -70,9 +71,26 @@ def settings_chips(feature: Feature, settings: Optional[Settings]) -> List[Dict[
     ]
 
 
+def uses_aws(feature: Feature) -> bool:
+    """True for the features that build a boto3 client (they all read the AWS region)."""
+    return "aws_region" in feature.settings_used
+
+
+def aws_chip(aws_source: Optional[str]) -> Dict[str, Any]:
+    """The chip saying where the AWS credentials come from (or that none are configured)."""
+    if aws_source:
+        return {"key": "aws_account", "label": "AWS account", "value": aws_source}
+    return {"key": "aws_account", "label": "AWS account", "value": "not set", "missing": True,
+            "hint": "Select an AWS Account in the webapp settings (Settings tab), then restart the backend."}
+
+
 def form_schema(feature: Feature, descriptor: Dict[str, Any] = None,
-                settings: Optional[Settings] = None) -> Dict[str, Any]:
-    """``{"feature_id", "label", "description", "destructive", "confirm", "params": [...], "settings": [...]}``."""
+                settings: Optional[Settings] = None, aws_source: Optional[str] = None) -> Dict[str, Any]:
+    """``{"feature_id", "label", "description", "destructive", "confirm", "params": [...], "settings": [...]}``.
+
+    ``aws_source`` is where the backend finds the AWS credentials (``Context.aws_preset_source``);
+    the features that use AWS get a chip for it, flagged ``missing`` when there are none.
+    """
     if descriptor is None:
         try:
             descriptor = MACRO_DESCRIPTORS[feature.macro_folder]
@@ -93,7 +111,7 @@ def form_schema(feature: Feature, descriptor: Dict[str, Any] = None,
         "destructive": feature.destructive,
         "confirm": feature.confirm,
         "params": params,
-        "settings": settings_chips(feature, settings),
+        "settings": settings_chips(feature, settings) + ([aws_chip(aws_source)] if uses_aws(feature) else []),
     }
 
 

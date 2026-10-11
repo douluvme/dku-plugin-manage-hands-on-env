@@ -267,12 +267,15 @@
     $("hoc-feature-description").textContent = schema.description || "";
     var chips = $("hoc-settings");
     chips.innerHTML = "";
+    var hints = [];
     (schema.settings || []).forEach(function (setting) {
-      chips.appendChild(el("span", { class: "hoc-chip" }, [
+      chips.appendChild(el("span", { class: "hoc-chip" + (setting.missing ? " missing" : ""), title: setting.hint || "" }, [
         el("span", { class: "hoc-chip-key", text: setting.label }),
         el("span", { class: "hoc-chip-value", text: setting.value })
       ]));
+      if (setting.missing && setting.hint) hints.push(setting.hint);
     });
+    if (hints.length) chips.appendChild(el("span", { class: "hoc-chip-hint", text: hints.join(" ") }));
     chips.hidden = !(schema.settings && schema.settings.length);
     var form = $("hoc-form");
     form.innerHTML = "";

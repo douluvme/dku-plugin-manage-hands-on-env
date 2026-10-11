@@ -16,7 +16,8 @@
     //                       duplicate "params" keys and the aws-credentials preset id.
     // v1.2.0 release note : "Hands-on Workshop Console" plugin webapp: every macro feature from one page with
     //                       live progress, log and job history; macro logic extracted into
-    //                       managehandsonenv.features and shared by the macros and the webapp.
+    //                       managehandsonenv.features and shared by the macros and the webapp; the webapp
+    //                       has its own AWS Account setting and missing AWS credentials fail with a clear message.
     "version": "1.2.0",
 
     // Meta data for display purposes:

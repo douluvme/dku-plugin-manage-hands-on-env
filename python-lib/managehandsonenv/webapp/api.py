@@ -20,6 +20,7 @@ def context_payload(ctx: Context) -> Dict[str, Any]:
         "admin_project_key": ctx.settings.admin_project_key,
         "allowed": ctx.is_admin_project,
         "settings": ctx.settings.public_dict(),
+        "aws": {"configured": bool(ctx.aws_preset()), "source": ctx.aws_preset_source()},
         "categories": [
             {
                 "name": category,
@@ -49,7 +50,8 @@ def register_routes(app, manager: JobManager, context_factory: Callable[[], Cont
 
     def schema_for(feature):
         descriptor = descriptor_loader(feature.macro_folder) if descriptor_loader else None
-        return form_schema(feature, descriptor, settings=context_factory().settings)
+        ctx = context_factory()
+        return form_schema(feature, descriptor, settings=ctx.settings, aws_source=ctx.aws_preset_source())
 
     def error(status: int, message: str, **extra):
         payload = {"error": message}

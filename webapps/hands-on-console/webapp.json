@@ -12,8 +12,18 @@
     "noJSSecurity": "true",
     "standardWebAppLibraries": ["jquery", "bootstrap", "dataiku"],
 
-    /* no per-instance settings: everything comes from the plugin settings (plugin.json params) */
-    "params": [],
+    /* The one per-instance setting: the AWS account the Workshop Environment features use,
+       declared like the macros declare theirs so DSS hands the backend the resolved preset
+       (get_webapp_config()). Everything else comes from the plugin settings (plugin.json params). */
+    "params": [
+        {
+            "type": "PRESET",
+            "name": "aws_account",
+            "label": "AWS Account",
+            "parameterSetId": "aws-credentials",
+            "mandatory": true
+        }
+    ],
 
     "roles": []
 }

@@ -13,9 +13,10 @@ from managehandsonenv.webapp.jobs import JobManager
 flask = pytest.importorskip("flask")
 
 
-def build_app(project_key="ADMINV4", tree=None):
+def build_app(project_key="ADMINV4", tree=None, component_config=None):
     client = FakeClient().build(tree or {})
-    factory = lambda: Context(client=client, project_key=project_key)  # noqa: E731
+    factory = lambda: Context(client=client, project_key=project_key, component_config=component_config or {},  # noqa: E731
+                              component_label="webapp settings")
     app = flask.Flask("hands-on-test")
     manager = JobManager(factory)
     register_routes(app, manager, factory)
@@ -28,6 +29,7 @@ def test_context_lists_features_by_category():
     assert body["project_key"] == "ADMINV4" and body["admin_project_key"] == "ADMINV4"
     assert body["allowed"] is True
     assert body["settings"]["sandbox_folder"] == "SANDBOX"
+    assert body["aws"] == {"configured": False, "source": None}
     assert [c["name"] for c in body["categories"]][0] == "⚠️ Hands-on 1: Manage Starter Projects"
     assert [c["menu_name"] for c in body["categories"]] == ["Starter Projects", "Housekeeping", "Workshop Environment"]
     ids = [f["id"] for c in body["categories"] for f in c["features"]]
@@ -38,6 +40,13 @@ def test_context_lists_features_by_category():
     assert body["categories"][0]["display_name"] == "Manage Starter Projects"
     delete = next(f for c in body["categories"] for f in c["features"] if f["id"] == "delete_projects")
     assert delete["destructive"] and delete["confirm"]
+
+
+def test_context_and_form_report_the_aws_credential_source():
+    http, _, _ = build_app(component_config={"aws_account": {"aws_access_key_id": "k", "aws_secret_access_key": "s"}})
+    assert http.get("/api/context").get_json()["aws"] == {"configured": True, "source": "webapp settings"}
+    chips = http.get("/api/features/db_status/form").get_json()["settings"]
+    assert chips[-1] == {"key": "aws_account", "label": "AWS account", "value": "webapp settings"}
 
 
 def test_form_and_unknown_feature():

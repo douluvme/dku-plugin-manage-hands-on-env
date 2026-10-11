@@ -315,6 +315,10 @@
 .hoc-chip { display: inline-flex; align-items: center; border: 1px solid #d6dde6; border-radius: 12px; font-size: 12px; overflow: hidden; }
 .hoc-chip-key { background: #eef2f7; color: #555; padding: 2px 8px; }
 .hoc-chip-value { padding: 2px 8px; font-family: Menlo, Consolas, monospace; color: #222; }
+.hoc-chip.missing { border-color: #e4b4b4; }
+.hoc-chip.missing .hoc-chip-key { background: #f8d7da; color: #842029; }
+.hoc-chip.missing .hoc-chip-value { color: #b02a37; }
+.hoc-chip-hint { flex-basis: 100%; font-size: 12px; color: #b02a37; }
 
 .hoc-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 13px; padding-top: 4px; }
 .hoc-switch input { position: absolute; opacity: 0; width: 0; height: 0; }

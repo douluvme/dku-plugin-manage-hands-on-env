@@ -99,10 +99,26 @@ def test_destructive_features_confirm_except_dry_runs():
 def test_context_aws_preset_and_admin_check():
     ctx = make_context(project_key="OTHER")
     assert not ctx.is_admin_project
-    assert ctx.aws_preset({"aws_account": {"aws_access_key_id": "macro"}}) == {"aws_access_key_id": "macro"}
+    assert ctx.aws_preset() == {} and ctx.aws_preset_source() is None
+    assert ctx.aws_preset({"aws_account": {"aws_access_key_id": "run"}}) == {"aws_access_key_id": "run"}
+    assert ctx.aws_preset_source({"aws_account": {"aws_access_key_id": "run"}}) == "run parameters"
+    ctx.component_config["aws_account"] = {"aws_access_key_id": "webapp"}
+    ctx.component_label = "webapp settings"
+    assert ctx.aws_preset({"aws_account": {"aws_access_key_id": "run"}}) == {"aws_access_key_id": "webapp"}
+    assert ctx.aws_preset_source() == "webapp settings"
     ctx.plugin_config["aws_account"] = {"aws_access_key_id": "plugin"}
-    assert ctx.aws_preset({"aws_account": {"aws_access_key_id": "macro"}}) == {"aws_access_key_id": "plugin"}
+    assert ctx.aws_preset({"aws_account": {"aws_access_key_id": "run"}}) == {"aws_access_key_id": "plugin"}
+    assert ctx.aws_preset_source() == "plugin settings"
     assert make_context(project_key="MYADMIN", admin_project_key="MYADMIN").is_admin_project
+
+
+def test_context_skips_unresolved_or_empty_presets():
+    ctx = make_context()
+    ctx.plugin_config["aws_account"] = {"mode": "PRESET", "name": "workshop"}   # reference, not values
+    ctx.component_config["aws_account"] = {}
+    assert ctx.aws_preset() == {} and ctx.aws_preset_source() is None
+    ctx.component_config["aws_account"] = {"aws_access_key_id": "k", "aws_secret_access_key": "s"}
+    assert ctx.aws_preset_source() == "component settings"
 
 
 # --- setup features --------------------------------------------------------------
@@ -264,6 +280,7 @@ def test_api_node_status_without_boto3(monkeypatch):
 
     monkeypatch.setitem(sys.modules, "boto3", None)  # make `import boto3` fail
     ctx = make_context()
+    ctx.component_config["aws_account"] = {"aws_access_key_id": "k", "aws_secret_access_key": "s"}
     with pytest.raises(RuntimeError, match="boto3 is not installed"):
         get_feature("api_node_status").run(ctx, {}, lambda p: None)
 

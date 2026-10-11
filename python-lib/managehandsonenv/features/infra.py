@@ -10,6 +10,12 @@ CATEGORY = "⚠️ Hands-on 3: Manage Workshop Environment"
 MENU_CATEGORY = "Workshop Environment"
 
 
+def _client(ctx: Context, params: Dict[str, Any], service: str):
+    """A boto3 client for ``service``, after logging where the credentials come from."""
+    ctx.log("AWS credentials: {}".format(ctx.aws_preset_source(params) or "not configured"))
+    return boto_client(service, ctx.aws_preset(params), ctx.settings.aws_region)
+
+
 # --- 3-1 modify DB class ------------------------------------------------------
 
 def modify_db_class(ctx: Context, params: Dict[str, Any], progress_callback) -> str:
@@ -18,7 +24,7 @@ def modify_db_class(ctx: Context, params: Dict[str, Any], progress_callback) -> 
     wait_TF = params.get("wait_TF", False)
     db_instance_id = ctx.settings.rds_instance_id
 
-    rds_client = boto_client('rds', ctx.aws_preset(params), ctx.settings.aws_region)
+    rds_client = _client(ctx, params, 'rds')
     rds_client.modify_db_instance(
         DBInstanceIdentifier=db_instance_id,
         DBInstanceClass=db_class,
@@ -42,7 +48,7 @@ def modify_db_class(ctx: Context, params: Dict[str, Any], progress_callback) -> 
 
 def db_status(ctx: Context, params: Dict[str, Any], progress_callback) -> str:
     """Report the current RDS DB instance class and status of the workshop database."""
-    rds_client = boto_client('rds', ctx.aws_preset(params), ctx.settings.aws_region)
+    rds_client = _client(ctx, params, 'rds')
 
     response = rds_client.describe_db_instances(DBInstanceIdentifier=ctx.settings.rds_instance_id)
     db_class = response['DBInstances'][0]['DBInstanceClass']
@@ -58,7 +64,7 @@ def api_node_power(ctx: Context, params: Dict[str, Any], progress_callback) -> s
     task = params["start_or_stop"]
     instance_id = ctx.settings.api_node_instance_id
 
-    ec2_client = boto_client('ec2', ctx.aws_preset(params), ctx.settings.aws_region)
+    ec2_client = _client(ctx, params, 'ec2')
     instance_name, instance_state = ec2_instance_details(ec2_client, instance_id, log=ctx.log)
 
     if task == 'start':
@@ -83,7 +89,7 @@ def api_node_status(ctx: Context, params: Dict[str, Any], progress_callback) -> 
     """Report whether the EC2 instance hosting the API node is running or stopped."""
     instance_id = ctx.settings.api_node_instance_id
 
-    ec2_client = boto_client('ec2', ctx.aws_preset(params), ctx.settings.aws_region)
+    ec2_client = _client(ctx, params, 'ec2')
     instance_name, instance_state = ec2_instance_details(ec2_client, instance_id, log=ctx.log)
 
     if instance_state is None:
