@@ -364,7 +364,7 @@
           var checked = Array.isArray(dflt) && dflt.indexOf(choice.value) >= 0;
           return el("label", {}, [
             el("input", { type: "checkbox", name: name, value: choice.value, checked: checked ? "checked" : null }),
-            document.createTextNode(choice.label || choice.value)
+            el("span", { class: "hoc-choice-text", text: choice.label || choice.value })
           ]);
         }))];
         break;

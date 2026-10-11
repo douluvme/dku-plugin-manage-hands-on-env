@@ -195,22 +195,53 @@
 .hoc-field select, .hoc-field textarea {
   width: 100%;
   max-width: 480px;
-  padding: 5px 8px;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  line-height: 20px;
   border: 1px solid #c9d2dc;
-  border-radius: 4px;
+  border-radius: 6px;
+  background: #fff;
+  color: #222;
   font-size: 13px;
   font-family: inherit;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.hoc-field input:hover, .hoc-field select:hover, .hoc-field textarea:hover { border-color: #9fb0c4; }
+.hoc-field input:focus, .hoc-field select:focus, .hoc-field textarea:focus {
+  outline: none;
+  border-color: #2c5aa0;
+  box-shadow: 0 0 0 3px #dfe6f0;   /* the selection tint as a focus ring */
 }
 .hoc-field textarea { min-height: 72px; font-family: Menlo, Consolas, monospace; }
-.hoc-field .hoc-input > input[type="checkbox"] { align-self: flex-start; margin: 9px 0 6px 2px; }
+/* selects: custom look with a chevron (Bootstrap/DSS style the native one differently) */
+.hoc-form select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 32px;
+  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%233b4a5c' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 10px center;
+  background-size: 12px 12px;
+  cursor: pointer;
+}
+.hoc-form select:disabled { background-color: #f5f7fa; color: #888; cursor: default; }
+.hoc-form select::-ms-expand { display: none; }
+/* checkboxes: Bootstrap and DSS set their own margins on input[type=checkbox], so the
+   spacing comes from the label's gap and the input's margin is forced to 0 */
+.hoc-form .hoc-input > input[type="checkbox"] { align-self: flex-start; margin: 9px 0 6px 2px !important; width: 15px; height: 15px; accent-color: #2c5aa0; }
 .hoc-field .hoc-help { font-size: 12px; color: #666; }
 .hoc-field .hoc-req { color: #c62828; margin-left: 3px; font-weight: 700; }
 .hoc-field .hoc-field-error { font-size: 12px; color: #b3261e; }
 .hoc-field.invalid input, .hoc-field.invalid select, .hoc-field.invalid textarea { border-color: #b3261e; }
+.hoc-field.invalid input:focus, .hoc-field.invalid select:focus, .hoc-field.invalid textarea:focus { box-shadow: 0 0 0 3px #f5d9d6; }
 .hoc-field.invalid .hoc-checklist { outline: 1px solid #b3261e; outline-offset: 4px; border-radius: 3px; }
 .hoc-checklist { display: flex; flex-direction: column; gap: 2px; }
-.hoc-checklist label { display: flex; align-items: center; font-weight: normal; padding: 3px 0; font-size: 13px; cursor: pointer; }
-.hoc-checklist input { margin: 0 10px 0 2px; }
+.hoc-checklist label {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: normal; padding: 3px 6px; margin: 0 0 0 -6px; border-radius: 4px; font-size: 13px; cursor: pointer;
+}
+.hoc-checklist label:hover { background: #f3f6fa; }
+.hoc-form .hoc-checklist input[type="checkbox"] { margin: 0 !important; flex: none; width: 15px; height: 15px; accent-color: #2c5aa0; }
+.hoc-choice-text { line-height: 18px; }
 
 .hoc-actions { margin-top: 14px; display: flex; align-items: center; gap: 12px; }
 .hoc-run-btn {
